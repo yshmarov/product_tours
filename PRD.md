@@ -7,8 +7,8 @@
 ## Summary
 
 `product_tours` is a Rails engine for self-hosted product adoption: product
-tours, contextual guides, onboarding checklists, and an optional resource
-center, all managed inside the host app and stored in the host database.
+tours, contextual guides, and lightweight onboarding checklists, all managed
+inside the host app and stored in the host database.
 
 It should be a real Rails-native alternative to Appcues, Userflow, Chameleon,
 and Pendo for teams that want in-app guidance without a third-party script,
@@ -40,9 +40,9 @@ Product promise:
 
 ## Market Scan
 
-Hosted product-adoption tools converge on the same surface area:
+Hosted product-adoption tools converge on a broad surface area:
 
-- Appcues offers flows, checklists, embeds, NPS/surveys, segmentation, and
+- Appcues offers flows, checklists, embeds, surveys, segmentation, and
   reporting. Its public pricing is MAU and published-experience based.
   See [Appcues Experiences](https://www.appcues.com/experiences) and
   [Appcues Pricing](https://www.appcues.com/pricing).
@@ -52,7 +52,7 @@ Hosted product-adoption tools converge on the same surface area:
   See [Userflow](https://www.userflow.com/) and
   [Userflow Pricing](https://www.userflow.com/pricing).
 - Chameleon supports tours, tooltips, embeddables, microsurveys, launchers,
-  targeting, scheduling, recurrence, localization, A/B testing, goals, and
+  targeting, scheduling, recurrence, localization, experiments, goals, and
   integrations. Its current Pro plan starts at $750/month.
   See [Chameleon Tours](https://www.chameleon.io/tours) and
   [Chameleon Plans](https://www.chameleon.io/plans).
@@ -66,11 +66,13 @@ Hosted product-adoption tools converge on the same surface area:
   they do not provide dashboard content management, Rails auth, tenant scoping,
   event persistence, install generators, or a database-backed admin workflow.
 
-Conclusion: to be a SaaS replacement, `product_tours` must eventually cover
-tours, checklists, contextual launchers, resource-center style self-service,
-targeting, recurrence, localization, and analytics. To stay gem-sized, it
-should replace brittle no-code DOM selection with Rails-native anchors and
-host-defined context.
+Conclusion: SaaS competitors bundle a lot, but this gem should not. The Rails
+opportunity is a smaller, sharper 80%: tours, checklists, contextual launchers,
+simple targeting, recurrence, and useful event/progress data. Surveys and NPS
+belong in `testimonials`; A/B tests belong in host app tools such as Flipper;
+heavy analytics and integrations belong in host code until real demand proves
+otherwise. To stay gem-sized, `product_tours` should replace brittle no-code
+DOM selection with Rails-native anchors and host-defined context.
 
 ## Positioning
 
@@ -88,6 +90,10 @@ This is intentionally different from generic SaaS tools:
   pretending a visual DOM picker will survive every deploy.
 - The host app already has auth, tenancy, mailers, jobs, CSP, and I18n. The gem
   should fit those systems rather than replacing them.
+- The host app already has sibling gems for adjacent jobs. `testimonials` owns
+  testimonials, video reviews, and NPS. `ideasbugs` owns product feedback.
+  `livechat` owns support messaging. `product_tours` owns guidance and
+  activation only.
 
 Tagline:
 
@@ -104,6 +110,8 @@ Tagline:
 - Let developers place tours by stable keys and anchors.
 - Let admins update guide content, ordering, status, CTA, and media without a
   deploy.
+- Let the host app invoke tours after success events, not only after a user
+  clicks a button.
 - Support signed-in and anonymous visitors.
 - Support multi-tenant apps through an opaque tenant key.
 - Support eligibility via host-provided segments/context, not user-data sync.
@@ -123,15 +131,18 @@ Absolute non-goals for v1:
 - No browser extension visual builder.
 - No AI authoring, summarization, transcript generation, or chatbot.
 - No mobile SDKs.
+- No NPS, surveys, microsurveys, testimonials, or feedback collection. Those
+  belong in `testimonials` and `ideasbugs`.
+- No A/B testing or experimentation engine. Use host app tools such as Flipper.
+- No browser-based video recording. The gem accepts video links and later,
+  maybe uploads; it never records video.
 - No enterprise workflow suite: roles, approvals, SAML, experiments, contracts,
   or cross-workspace governance stay out of the gem.
 
 Deferred until there is real demand:
 
-- A/B testing.
 - Advanced analytics charts.
 - Automated DOM scraping or no-code event capture.
-- Browser-based video recording.
 - Built-in video hosting.
 - Active Storage uploads for tour media.
 - Deep integrations with Segment, Amplitude, Mixpanel, HubSpot, Slack, etc.
@@ -145,8 +156,11 @@ Deferred until there is real demand:
   admins manage content and publishing.
 - **Anchors over selectors.** Use stable `data-product-tour-anchor` markers and
   helper-generated targets before arbitrary CSS selectors.
-- **Intent beats interruption.** Explicit clicks, checklists, and resource
-  center opens are safer defaults than surprise auto-starts.
+- **Intent beats interruption.** Explicit clicks, success moments, and
+  checklists are safer defaults than surprise auto-starts.
+- **Calm product scope.** Build in a Jason Fried/Basecamp-style way: the small
+  thing that solves the real Rails app problem. Prefer obvious flows, fewer
+  settings, and documented escape hatches over platform sprawl.
 - **One guide, one outcome.** A tour should guide a user to a single activation
   or adoption milestone.
 - **Self-hosted by default.** Content and events stay in the host database.
@@ -157,6 +171,23 @@ Deferred until there is real demand:
   event handlers.
 - **Screenshots sell the gem.** The README must show a polished widget,
   walkthrough, checklist, and dashboard before the gem is announced widely.
+
+## Product Boundaries With Sibling Gems
+
+Avoid cannibalizing the rest of the gem suite:
+
+- `testimonials` owns testimonials, video reviews, consent, public collection
+  pages, NPS, and promoter/detractor flows.
+- `ideasbugs` owns private feedback, bug reports, feature requests, screenshots,
+  and triage.
+- `livechat` owns user-to-team support messaging.
+- `i18n_proofreading` owns translation review.
+- `product_tours` owns product guidance: "show this user how to complete this
+  product workflow now."
+
+Integration is allowed through hooks and docs, not duplicated product surface.
+For example, a completed tour may trigger `testimonial_prompt!` in host code,
+but `product_tours` should not ship its own NPS or review prompt.
 
 ## Reference Gem Patterns To Reuse
 
@@ -207,8 +238,7 @@ gems:
 ### 1. Guide Library
 
 A guide is the base content unit. It can be presented as a modal video, inline
-embed, step-through walkthrough, checklist item, announcement, or resource
-center entry as the gem grows.
+embed, step-through walkthrough, or checklist item as the gem grows.
 
 v0.1 must support:
 
@@ -217,6 +247,8 @@ v0.1 must support:
 - video guides
 - multi-step anchored walkthroughs
 - CTA links
+- success-event prompts from controller code
+- completion events from controller code
 - viewed, dismissed, completed, and CTA events
 - tenant scoping
 - basic eligibility by segment
@@ -224,9 +256,10 @@ v0.1 must support:
 v0.2 should support:
 
 - onboarding checklists
-- resource-center launcher
 - show-once/show-until-completed behavior
-- completion helper API
+
+Resource-center style self-service is useful, but it is not a v0.1/v0.2
+promise. Revisit after the core tour/checklist loop is polished.
 
 ### 2. Anchored Walkthroughs
 
@@ -271,16 +304,23 @@ Supported in v0.1:
 - Vimeo
 - Loom
 - Tella
+- Voomly
 - direct MP4/WebM URLs
 
 Provider handling:
 
 - Normalize supported provider URLs into embeddable players where practical.
 - Use a direct `<video>` player for direct media URLs.
+- For Voomly, accept iframe embed URLs and share/embed URLs copied from Voomly's
+  video drive. v0.1 may treat it as an iframe player and record `viewed`; player
+  API completion tracking can be added once the embed is stable in the first
+  real host app.
 - Record completion only where completion can be detected reliably.
 - Fall back to `viewed` and `dismissed` for providers without reliable
   completion events.
 - Never require Active Storage for v0.1.
+- Never record video in the browser; video creation/hosting stays outside this
+  gem.
 
 ### 4. Checklists
 
@@ -297,18 +337,7 @@ Expected v0.2 behavior:
 - A checklist hides when all required items are complete, unless configured to
   remain available.
 
-### 5. Resource Center
-
-Expected v0.2/v0.3 behavior:
-
-- `product_tours_resource_center` helper or `show_resource_center` config
-  renders an always-available launcher.
-- The panel lists eligible guides, checklists, announcements, and external
-  links.
-- It is segmented by tenant, page, and host-provided segment keys.
-- Empty centers render nothing.
-
-### 6. Server-Side Prompts And Completion
+### 5. Server-Side Prompts And Completion
 
 The host app knows success moments. Copy the `testimonials` pattern:
 
@@ -316,7 +345,7 @@ The host app knows success moments. Copy the `testimonials` pattern:
 class BillingController < ApplicationController
   def update
     # ...
-    product_tours_complete!(:billing_setup)
+    product_tour_complete!(:billing_setup)
     product_tour_prompt!(:invite_team)
     redirect_to billing_path
   end
@@ -329,8 +358,26 @@ Required behavior:
   render.
 - Auto-prompting respects recurrence rules.
 - Explicit clicks bypass recurrence rules.
-- `product_tours_complete!(key)` records completion for the current
+- `product_tour_complete!(key)` records completion for the current
   user/visitor/tenant and creates a `completed` event.
+- `product_tour_prompt!(key)` is a v0.1 requirement, not a later enhancement.
+  Tours must be invokable from product success events such as "invoice created",
+  "team member invited", "project published", or "billing connected".
+
+### 6. Resource Center
+
+Possible later behavior:
+
+- `product_tours_resource_center` helper or `show_resource_center` config
+  renders an always-available launcher.
+- The panel lists eligible guides, checklists, announcements, and external
+  links.
+- It is segmented by tenant, page, and host-provided segment keys.
+- Empty centers render nothing.
+
+This is an explicit parking-lot idea. Do not add schema, routes, helpers, or
+configuration for it until the core tour/checklist product is already useful in
+a real app.
 
 ## Installation
 
@@ -382,7 +429,6 @@ ProductTours.configure do |config|
   config.context = ->(_request) { {} }
   config.mount_path = "/product_tours"
   config.rate_limit = { to: 60, within: 1.minute }
-  config.show_resource_center = false
   config.accent_color = nil
   config.on_event = ->(_event) {}
   config.on_complete = ->(_progress) {}
@@ -438,7 +484,7 @@ Enums:
 
 ```ruby
 enum :status, %w[draft published archived].index_by(&:itself)
-enum :kind, %w[modal video embed walkthrough checklist resource].index_by(&:itself)
+enum :kind, %w[modal video embed walkthrough checklist].index_by(&:itself)
 ```
 
 Rules:
@@ -449,7 +495,7 @@ Rules:
 - `segments`, `page_rules`, `recurrence`, and `metadata` are JSON columns when
   supported by the database, else text serialized by Rails.
 - v0.1 supports `modal`, `video`, `embed`, and `walkthrough`.
-- `checklist` and `resource` are schema-reserved for v0.2+.
+- `checklist` arrives in v0.2 if the tour foundation is already solid.
 - Enums are string-backed.
 
 Indexes:
@@ -626,9 +672,11 @@ trigger: "manual"
 
 Trigger modes:
 
-- `manual` - helper button/link, JS API, or resource center only.
+- `manual` - helper button/link or JS API only.
 - `auto` - allowed to auto-open when eligible and recurrence allows it.
-- `completion` - used as a checklist/resource item, not auto-opened directly.
+- `success` - queued by `product_tour_prompt!(key)` after a host-app success
+  event and opened on the next eligible HTML render.
+- `completion` - used as a checklist item, not auto-opened directly.
 
 Rules:
 
@@ -770,6 +818,8 @@ v0.1 requirements:
 - The widget works under nonce-based CSP.
 - `product_tour_button(:key)` renders only for a published eligible tour.
 - Clicking a product tour button opens a guide without a full page reload.
+- Calling `product_tour_prompt!(:key)` from a controller opens the guide on the
+  next eligible HTML render without requiring a user click.
 - `product_tour_embed(:key)` renders an inline player/card.
 - `product_tour_anchor(:key)` emits a stable anchor marker.
 - A multi-step walkthrough can highlight two anchors and complete.
@@ -779,6 +829,8 @@ v0.1 requirements:
 - Closing an unfinished guide records `dismissed`.
 - CTA clicks are recorded when a CTA is configured.
 - Completing all required steps records `completed` and updates progress.
+- Voomly links copied from Voomly's share/embed flow render as an embedded
+  video and record at least `viewed`.
 - Tenant-specific tours override global tours with the same key.
 - Segment eligibility works from `config.segments`.
 - Tests cover helpers, dashboard authorization, guide lifecycle, step
@@ -823,7 +875,7 @@ Comparison:
 | Admin-managed content   | Yes                   | No             | Yes               |
 | Anchored walkthroughs   | Yes                   | Custom JS      | Yes               |
 | Checklists              | v0.2                  | Custom code    | Yes               |
-| Resource center         | v0.2/v0.3             | Custom code    | Yes               |
+| Resource center         | Later if needed       | Custom code    | Yes               |
 | Analytics/events        | In your DB            | Manual         | Vendor dashboard   |
 | Branding                | Your app              | Your app       | Often plan-gated   |
 | Data ownership          | Host-owned            | Host-owned     | Vendor-owned       |
@@ -832,14 +884,16 @@ README must include:
 
 - install commands
 - first tour in under 5 minutes
+- success-event prompt example from a controller
 - a minimal anchor walkthrough example
 - a video-guide example
+- Voomly video example
 - a checklist example once v0.2 ships
 - configuration table
 - Devise and Rails 8 auth examples
 - multi-tenancy example
 - Turbo/CSP explanation
-- screenshots or GIFs of the widget, walkthrough, checklist, and dashboard
+- screenshots or GIFs of the widget, walkthrough, and dashboard
 - explicit "why not Appcues/Userflow/Chameleon/Pendo" comparison
 - explicit "why not Driver.js/Intro.js" comparison
 
@@ -858,6 +912,9 @@ README must include:
 - `product_tour_anchor`
 - modal/video guides
 - anchored multi-step walkthroughs
+- Voomly video embeds
+- `product_tour_prompt!` success-event invocation
+- `product_tour_complete!` completion helper
 - manual and conservative auto triggers
 - event recording
 - progress recording
@@ -870,12 +927,10 @@ README must include:
 - Minitest coverage and CI matrix
 - README screenshots/GIFs
 
-### v0.2 - Checklists And Resource Center
+### v0.2 - Checklists
 
 - `product_tour_checklist`
 - checklist item model behavior using existing steps
-- completion helper API
-- resource center launcher/panel
 - show-once and show-until-completed helpers
 - empty-state suppression
 - import/export seed YAML for host apps
@@ -886,7 +941,6 @@ README must include:
 - Active Storage uploads for media
 - poster image handling
 - captions/transcript field
-- public read API for eligible resource-center content
 - better mobile anchored-tour behavior
 
 ### v0.4 - Analytics And Hooks
