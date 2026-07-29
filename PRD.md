@@ -42,24 +42,24 @@ Product promise:
 
 Hosted product-adoption tools converge on a broad surface area:
 
-- Appcues offers flows, checklists, embeds, surveys, segmentation, and
-  reporting. Its public pricing is MAU and published-experience based.
+- Appcues offers flows, checklists, embeds, segmentation, and reporting. Its
+  public pricing is MAU and published-experience based.
   See [Appcues Experiences](https://www.appcues.com/experiences) and
   [Appcues Pricing](https://www.appcues.com/pricing).
-- Userflow positions around product tours, checklists, surveys, banners,
-  resource centers, targeting, triggers, analytics, and AI assistance. Its
-  current pricing starts at $500/month for Adoption Studio at 1K MAUs.
+- Userflow positions around product tours, checklists, banners, in-app guide
+  launchers, targeting, triggers, analytics, and AI assistance. Its current
+  pricing starts at $500/month for Adoption Studio at 1K MAUs.
   See [Userflow](https://www.userflow.com/) and
   [Userflow Pricing](https://www.userflow.com/pricing).
-- Chameleon supports tours, tooltips, embeddables, microsurveys, launchers,
-  targeting, scheduling, recurrence, localization, experiments, goals, and
-  integrations. Its current Pro plan starts at $750/month.
+- Chameleon supports tours, tooltips, embeddables, launchers, targeting,
+  scheduling, recurrence, localization, goals, and integrations. Its current
+  Pro plan starts at $750/month.
   See [Chameleon Tours](https://www.chameleon.io/tours) and
   [Chameleon Plans](https://www.chameleon.io/plans).
-- Pendo's Resource Center is an always-available in-app menu containing guide
+- Pendo's guide center is an always-available in-app menu containing guide
   lists, onboarding checklists, announcements, custom modules, and segmented
   content. See
-  [Pendo Resource Center](https://support.pendo.io/hc/en-us/articles/360031866712-Overview-of-the-Resource-Center).
+  [Pendo guide center docs](https://support.pendo.io/hc/en-us/articles/360031866712-Overview-of-the-Resource-Center).
 - Open-source JS libraries such as [Driver.js](https://driverjs.com/) and
   [Intro.js](https://introjs.com/) prove that lightweight, dependency-free
   step-through overlays can win broad adoption. They are not Rails products:
@@ -68,9 +68,8 @@ Hosted product-adoption tools converge on a broad surface area:
 
 Conclusion: SaaS competitors bundle a lot, but this gem should not. The Rails
 opportunity is a smaller, sharper 80%: tours, checklists, contextual launchers,
-simple targeting, recurrence, and useful event/progress data. Surveys and NPS
-belong in `testimonials`; A/B tests belong in host app tools such as Flipper;
-heavy analytics and integrations belong in host code until real demand proves
+simple targeting, recurrence, and useful event/progress data. Adjacent product
+surface belongs in sibling gems or host app code until real demand proves
 otherwise. To stay gem-sized, `product_tours` should replace brittle no-code
 DOM selection with Rails-native anchors and host-defined context.
 
@@ -90,10 +89,9 @@ This is intentionally different from generic SaaS tools:
   pretending a visual DOM picker will survive every deploy.
 - The host app already has auth, tenancy, mailers, jobs, CSP, and I18n. The gem
   should fit those systems rather than replacing them.
-- The host app already has sibling gems for adjacent jobs. `testimonials` owns
-  testimonials, video reviews, and NPS. `ideasbugs` owns product feedback.
-  `livechat` owns support messaging. `product_tours` owns guidance and
-  activation only.
+- The host app already has sibling gems for adjacent jobs. `testimonials`,
+  `ideasbugs`, and `livechat` own their own workflows. `product_tours` owns
+  guidance and activation only.
 
 Tagline:
 
@@ -129,13 +127,11 @@ Absolute non-goals for v1:
 - No third-party tracking script.
 - No syncing users/accounts into a vendor database.
 - No browser extension visual builder.
-- No AI authoring, summarization, transcript generation, or chatbot.
+- No AI authoring, summarization, or chatbot.
 - No mobile SDKs.
-- No NPS, surveys, microsurveys, testimonials, or feedback collection. Those
-  belong in `testimonials` and `ideasbugs`.
-- No A/B testing or experimentation engine. Use host app tools such as Flipper.
-- No browser-based video recording. The gem accepts video links and later,
-  maybe uploads; it never records video.
+- No testimonial or feedback collection. Those belong in sibling gems.
+- No media creation workflow. The gem accepts video links and later, maybe
+  uploads.
 - No enterprise workflow suite: roles, approvals, SAML, experiments, contracts,
   or cross-workspace governance stay out of the gem.
 
@@ -176,8 +172,8 @@ Deferred until there is real demand:
 
 Avoid cannibalizing the rest of the gem suite:
 
-- `testimonials` owns testimonials, video reviews, consent, public collection
-  pages, NPS, and promoter/detractor flows.
+- `testimonials` owns testimonials, video reviews, consent, and public
+  collection pages.
 - `ideasbugs` owns private feedback, bug reports, feature requests, screenshots,
   and triage.
 - `livechat` owns user-to-team support messaging.
@@ -187,7 +183,7 @@ Avoid cannibalizing the rest of the gem suite:
 
 Integration is allowed through hooks and docs, not duplicated product surface.
 For example, a completed tour may trigger `testimonial_prompt!` in host code,
-but `product_tours` should not ship its own NPS or review prompt.
+but `product_tours` should not ship its own review prompt.
 
 ## Reference Gem Patterns To Reuse
 
@@ -228,8 +224,8 @@ gems:
    host app.
 2. **Customer admin** - tenant-side admin completing setup, inviting teammates,
    configuring billing, or discovering advanced features.
-3. **Product/support/admin user** - manages guide content, watches drop-off,
-   updates onboarding copy, and retires stale tours.
+3. **Product/support/admin user** - manages guide content, watches simple
+   counts, updates onboarding copy, and retires stale tours.
 4. **Host developer** - installs the gem, places anchors/triggers, wires auth,
    tenant, segments, and completion events.
 
@@ -258,8 +254,8 @@ v0.2 should support:
 - onboarding checklists
 - show-once/show-until-completed behavior
 
-Resource-center style self-service is useful, but it is not a v0.1/v0.2
-promise. Revisit after the core tour/checklist loop is polished.
+An in-app `Guides` launcher is useful, but it is not a v0.1/v0.2 promise.
+Revisit after the core tour/checklist loop is polished.
 
 ### 2. Anchored Walkthroughs
 
@@ -322,6 +318,20 @@ Provider handling:
 - Never record video in the browser; video creation/hosting stays outside this
   gem.
 
+Upload-ready media design:
+
+- Include `video_url`, `thumbnail_url`, and `captions_url` string columns from
+  the first migration so URL-hosted and future uploaded media share one read
+  path.
+- Include `media_kind` with values such as `url` and `upload`; v0.1 only uses
+  `url`.
+- When Active Storage uploads arrive, attach files separately but expose them
+  through the same player-facing methods as URL media.
+- Uploaded videos may have optional thumbnail and captions attachments, but the
+  gem should not generate thumbnails, transcode video, or edit captions.
+- This keeps upgrades additive: enabling uploads later should not require
+  renaming the existing URL fields or changing how helpers render a guide.
+
 ### 4. Checklists
 
 Checklists are needed for SaaS-replacement credibility. They do not have to
@@ -364,12 +374,12 @@ Required behavior:
   Tours must be invokable from product success events such as "invoice created",
   "team member invited", "project published", or "billing connected".
 
-### 6. Resource Center
+### 6. Guides
 
 Possible later behavior:
 
-- `product_tours_resource_center` helper or `show_resource_center` config
-  renders an always-available launcher.
+- `product_tours_guides` helper or `show_guides` config renders an optional
+  always-available launcher.
 - The panel lists eligible guides, checklists, announcements, and external
   links.
 - It is segmented by tenant, page, and host-provided segment keys.
@@ -469,6 +479,8 @@ Fields:
 - `description`
 - `video_url`
 - `thumbnail_url`
+- `captions_url`
+- `media_kind`
 - `cta_label`
 - `cta_url`
 - `segments`
@@ -875,7 +887,7 @@ Comparison:
 | Admin-managed content   | Yes                   | No             | Yes               |
 | Anchored walkthroughs   | Yes                   | Custom JS      | Yes               |
 | Checklists              | v0.2                  | Custom code    | Yes               |
-| Resource center         | Later if needed       | Custom code    | Yes               |
+| Guides launcher         | Later if needed       | Custom code    | Yes               |
 | Analytics/events        | In your DB            | Manual         | Vendor dashboard   |
 | Branding                | Your app              | Your app       | Often plan-gated   |
 | Data ownership          | Host-owned            | Host-owned     | Vendor-owned       |
@@ -939,22 +951,20 @@ README must include:
 
 - localized guide fields
 - Active Storage uploads for media
-- poster image handling
-- captions/transcript field
 - better mobile anchored-tour behavior
 
-### v0.4 - Analytics And Hooks
+### v0.4 - Guides Launcher
 
-- funnel/drop-off dashboard
-- goal events
-- per-step completion rates
+- optional `product_tours_guides` launcher
+- eligible guides/checklists list
+- lightweight announcements as guides
 - retention/pruning helper
-- webhook-style hooks documented for Slack, email, analytics, and CRM
-- optional CSV export
 
 ### v1.0 - Public Launch Quality
 
-- stable public API
+- stable API for the widget and optional authenticated/admin JSON endpoints,
+  with private-by-default access and `testimonials`-style opt-in exposure only
+  if a real host app needs external rendering
 - upgrade guide
 - demo app
 - polished README
