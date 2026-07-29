@@ -306,7 +306,20 @@ Supported in v0.1:
 Provider handling:
 
 - Normalize supported provider URLs into embeddable players where practical.
+- Use a dedicated resolver object for URL parsing and embed URL generation.
+- Accept only HTTPS URLs from known provider hosts. Unsupported hosts,
+  non-video paths, invalid URLs, lookalike hosts, and non-HTTPS schemes must
+  return no embed.
+- The player helper must treat the resolver as the last line of defense: if no
+  safe embed URL can be resolved, render nothing or a dashboard-only validation
+  message, never an arbitrary iframe.
+- YouTube should normalize watch, shorts, live, embed, and `youtu.be` URLs to
+  `youtube-nocookie.com/embed/<id>?rel=0&modestbranding=1`.
+- Vimeo should preserve unlisted video privacy hashes.
 - Use a direct `<video>` player for direct media URLs.
+- When a supported provider exposes oEmbed data, use it in the dashboard to
+  preview the video, suggest title/thumbnail values, and validate that the URL
+  is embeddable.
 - For Voomly, accept iframe embed URLs and share/embed URLs copied from Voomly's
   video drive. v0.1 may treat it as an iframe player and record `viewed`; player
   API completion tracking can be added once the embed is stable in the first
@@ -320,17 +333,49 @@ Provider handling:
 
 Upload-ready media design:
 
-- Include `video_url`, `thumbnail_url`, and `captions_url` string columns from
+- Include `video_url`, `embed_url`, `thumbnail_url`, `captions_url`,
+  `provider`, `provider_id`, `provider_title`, and `media_kind` columns from
   the first migration so URL-hosted and future uploaded media share one read
   path.
 - Include `media_kind` with values such as `url` and `upload`; v0.1 only uses
   `url`.
+- Store the original pasted URL in `video_url`; store the normalized player URL
+  in `embed_url` when one can be derived.
 - When Active Storage uploads arrive, attach files separately but expose them
   through the same player-facing methods as URL media.
+- If a guide has both a URL and an upload, the upload wins at render time while
+  the URL remains as fallback/source metadata.
 - Uploaded videos may have optional thumbnail and captions attachments, but the
   gem should not generate thumbnails, transcode video, or edit captions.
+- If an uploaded file is removed, purge it after commit, not inside the save
+  transaction.
 - This keeps upgrades additive: enabling uploads later should not require
   renaming the existing URL fields or changing how helpers render a guide.
+
+oEmbed behavior:
+
+- Implement provider-specific oEmbed fetchers for providers with stable public
+  oEmbed endpoints, starting with YouTube and Vimeo. Wistia support is useful
+  because the oEmbed pattern is similar, but only add it if the URL normalizer
+  is already clean.
+- Use oEmbed response fields such as `title`, `thumbnail_url`, `html`, `width`,
+  `height`, `provider_name`, and `provider_url` as suggestions in the admin UI.
+- When an admin enters or pastes a video URL, the dashboard should offer to
+  fetch video data and prefill blank fields such as guide title, provider
+  title, thumbnail URL, provider, provider id, and embed URL.
+- Do not silently overwrite admin-edited fields. Autofill only blank fields by
+  default; an explicit "Refresh video data" action may replace generated
+  provider metadata after confirmation.
+- Persist only practical normalized fields on the tour. Store the raw oEmbed
+  payload in `metadata["oembed"]` only when useful for debugging or later
+  rendering.
+- oEmbed fetch happens only when an admin saves or previews a guide URL, not
+  on every end-user page view.
+- Network failure must never block saving a guide. The admin can still save
+  the URL and manually set a title/thumbnail.
+- `https://oembed.superails.com` is a useful reference/demo tool, but the gem
+  should call provider oEmbed endpoints directly rather than depend on that
+  service.
 
 ### 4. Checklists
 
@@ -478,8 +523,12 @@ Fields:
 - `title`
 - `description`
 - `video_url`
+- `embed_url`
 - `thumbnail_url`
 - `captions_url`
+- `provider`
+- `provider_id`
+- `provider_title`
 - `media_kind`
 - `cta_label`
 - `cta_url`
@@ -504,6 +553,10 @@ Rules:
 - `key` is stable and developer-facing.
 - `published` tours are visible to eligible end users.
 - `tenant` is an opaque string; `nil` means global.
+- `video_url` is the original pasted URL.
+- `embed_url` is the normalized player URL, if one can be derived.
+- `provider`, `provider_id`, and `provider_title` come from URL parsing and/or
+  oEmbed.
 - `segments`, `page_rules`, `recurrence`, and `metadata` are JSON columns when
   supported by the database, else text serialized by Rails.
 - v0.1 supports `modal`, `video`, `embed`, and `walkthrough`.
@@ -717,6 +770,7 @@ Required behavior:
 - Render nothing if the tour is missing, unpublished, disabled, or ineligible.
 - `product_tours_tag` emits the JSON config and same-origin widget script.
 - Button/link helpers open the guide without a full page reload.
+- Button/link helpers render the gem's own small, self-styled UI controls.
 - Embed helper renders an inline card/player.
 - Anchor helper renders the requested HTML tag with a stable
   `data-product-tour-anchor`.
@@ -725,6 +779,7 @@ Required behavior:
 - Closing before completion records `dismissed`.
 - CTA clicks record `cta_clicked`.
 - Finishing all required steps records `completed`.
+- Closing a modal removes the iframe/video element so playback stops.
 
 JS API:
 
@@ -734,8 +789,8 @@ window.ProductTours.complete("billing_setup")
 window.ProductTours.refresh()
 ```
 
-The JS API is useful for host UI triggers, Turbo visits, and custom onboarding
-menus.
+The JS API is useful for explicit product events and custom flows, but the
+primary public surface should be the gem's own helpers and widget UI.
 
 ## Dashboard
 
@@ -759,7 +814,6 @@ Index filters:
 - tenant
 - segment
 - recently viewed
-- low completion
 
 Dashboard requirements:
 
@@ -770,8 +824,11 @@ Dashboard requirements:
 - No inline event handlers.
 - Same-origin `dashboard.js` with a fingerprinted URL.
 - Preview video URLs on show/edit pages.
+- On edit/new, "Fetch video data" should use provider/oEmbed metadata where
+  available to prefill blank title, provider title, thumbnail, provider,
+  provider id, and embed URL fields.
 - Preview walkthrough steps against known anchors where possible.
-- Show event counts and completion rate for each guide.
+- Show simple event counts for each guide.
 - Show stale guide warning if no events have arrived recently.
 
 ## I18n
@@ -836,18 +893,28 @@ v0.1 requirements:
 - `product_tour_anchor(:key)` emits a stable anchor marker.
 - A multi-step walkthrough can highlight two anchors and complete.
 - Missing anchors are skipped without breaking the page.
+- Unsupported or unsafe video URLs never render an iframe.
+- YouTube URLs render through the nocookie embed host.
+- Vimeo unlisted URLs preserve their privacy hash.
 - Opening a guide records `started` or `viewed`.
 - Viewing a step records `step_viewed`.
 - Closing an unfinished guide records `dismissed`.
+- Closing a modal stops embedded or uploaded video playback by removing the
+  player node.
 - CTA clicks are recorded when a CTA is configured.
 - Completing all required steps records `completed` and updates progress.
 - Voomly links copied from Voomly's share/embed flow render as an embedded
   video and record at least `viewed`.
+- Fetching video metadata for a YouTube or Vimeo URL fills/suggests
+  `provider_title`, `thumbnail_url`, and `embed_url` without requiring an API
+  key.
+- Failed video metadata fetches show a validation/help message but do not block
+  manually saving the guide URL.
 - Tenant-specific tours override global tours with the same key.
 - Segment eligibility works from `config.segments`.
 - Tests cover helpers, dashboard authorization, guide lifecycle, step
   ordering, event recording, progress, tenant scoping, segment eligibility,
-  Turbo, and CSP.
+  video URL resolving, Turbo, and CSP.
 
 ## README Positioning
 
