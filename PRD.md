@@ -1,21 +1,15 @@
 # PRD: product_tours
 
-> Status: draft, revised 2026-07-30. Scope locked after review against the
-> shipped gems (`livechat`, `testimonials`, `ideasbugs`, `i18n_proofreading`).
-> Key decision: **no DOM-anchored tooltip tours** (the intro.js/Driver.js
-> model). Guidance is delivered as self-contained modals, inline cards, and
-> checklists that render their own UI and never attach to the host's DOM —
-> the same shape that made the other four gems reliable.
+> Status: draft, revised 2026-07-31.
+> Scope decision: `product_tours` ships individual invokable posts, not
+> multi-step process tours. No DOM-anchored tooltips, no prev/next walkthroughs,
+> no checklists in the first product.
 
 ## Summary
 
-`product_tours` is a Rails engine for self-hosted product adoption: in-app
-onboarding guides, video walkthroughs, multi-step modal guides, and (from v0.2)
-checklists — all managed inside the host app and stored in the host database.
-
-It aims to be the Rails-native alternative to Appcues, Userflow, Chameleon, and
-Pendo for teams that want in-app guidance without a third-party script, an
-external user database, MAU pricing, or a separate product-adoption platform.
+`product_tours` is a Rails engine for self-hosted in-app product guidance. The
+core unit is a `ProductTours::Post`: one guidance item that the host app invokes
+by key.
 
 ```ruby
 gem "product_tours"
@@ -27,142 +21,103 @@ gem "product_tours"
 
 <%# Any page where the app knows the right context %>
 <%= product_tour_button(:billing_setup) %>
-<%= product_tour_embed(:onboarding_video) %>
 ```
 
 Product promise:
 
-> Product tours for Rails. Build in-app onboarding, feature guides, and
-> checklists from your own app. Your UI, your database, no third-party widget.
+> Product tours for Rails. Add self-hosted in-app guidance posts to your app.
+> Your UI, your database, no third-party widget.
 
-## Why no DOM-anchored tours
+## Core Decision
 
-Appcues/Userflow/Chameleon/Pendo and OSS libraries like Driver.js and Intro.js
-attach a popover to a live host DOM element and reposition it across scrolling,
-sticky headers, transforms, breakpoints, and mobile. That positioning engine is
-the hard, high-maintenance, high-visibility-when-broken core of the category —
-and it is the one thing that made those tools not gem-sized.
+The gem deliberately avoids the two brittle parts of the product-tour category:
 
-`product_tours` deliberately skips it. Guidance renders as **centered,
-self-contained UI** (a modal, an inline card, a checklist), never pinned to a
-host element. This keeps the gem the same "renders its own widget" shape as
-`livechat`/`testimonials`/`ideasbugs`, keeps it dependency-free, and removes the
-failure mode where a mispositioned popover looks obviously broken. Multi-step
-guidance is a paginated modal ("1 of 3", Back/Next), not a DOM walkthrough.
+- No DOM-anchored tooltip tours. The gem never pins a popover to a host element.
+- No multi-step prev/next walkthroughs. Each `Post` is an individual invokable
+  unit.
 
-## Market Scan
-
-Hosted product-adoption tools converge on a broad, expensive surface:
-
-- Appcues — flows, checklists, embeds, segmentation, reporting; MAU/published-
-  experience pricing. [Experiences](https://www.appcues.com/experiences),
-  [Pricing](https://www.appcues.com/pricing).
-- Userflow — tours, checklists, banners, launchers, targeting, analytics, AI;
-  from ~$500/mo at 1K MAUs. [Site](https://www.userflow.com/),
-  [Pricing](https://www.userflow.com/pricing).
-- Chameleon — tours, tooltips, embeddables, launchers, targeting, localization;
-  Pro from ~$750/mo. [Tours](https://www.chameleon.io/tours),
-  [Plans](https://www.chameleon.io/plans).
-- Pendo — an always-available in-app guide center of guides, checklists, and
-  announcements. [Docs](https://support.pendo.io/hc/en-us/articles/360031866712-Overview-of-the-Resource-Center).
-
-Conclusion: SaaS competitors bundle a lot; this gem should not. The Rails
-opportunity is the sharper 80% — modal/video guides, multi-step modals,
-checklists, success-event prompts, simple targeting, and useful progress/event
-data — delivered as native Rails helpers over host-owned data. Adjacent surface
-belongs in sibling gems or host code until real demand proves otherwise.
+This keeps the gem in the same reliable shape as the sibling gems: the engine
+renders its own UI, stores its own rows, exposes small Rails helpers, and leaves
+workflow orchestration to the host app.
 
 ## Positioning
 
-**Self-hosted product adoption for Rails.** Developers place stable hooks
-(`product_tours_tag`, helper buttons, success-event calls). Product/support/admin
-users manage content from a mounted dashboard. End-user behavior is tracked in
-the same database as the product.
+**Self-hosted product guidance posts for Rails.** Developers place stable hooks
+(`product_tours_tag`, helper buttons, success-event calls). Admins manage post
+content from a mounted dashboard. End-user behavior is tracked in the host
+database.
 
-Intentionally different from generic SaaS:
+Intentionally different from hosted product-adoption platforms:
 
 - The host app already knows the user, account, plan, role, flags, and lifecycle.
-  Resolve them with request lambdas — don't sync a shadow customer database.
-- The host app already has auth, tenancy, mailers, jobs, CSP, and I18n. Fit
-  those systems instead of replacing them.
-- Sibling gems own adjacent jobs. `testimonials`, `ideasbugs`, and `livechat`
-  own their workflows; `product_tours` owns guidance and activation only.
+  Resolve them with request lambdas, not a synced customer database.
+- The host app already has auth, tenancy, mailers, jobs, CSP, and I18n. Fit those
+  systems instead of replacing them.
+- Sibling gems own adjacent jobs. `testimonials`, `ideasbugs`, `livechat`, and
+  `i18n_proofreading` keep their own workflows.
 
 Tagline:
 
-> `product_tours` — product tours, onboarding checklists, and in-app guidance
-> for Rails. Self-hosted, no third-party script, no MAU tax.
+> `product_tours` - in-app guidance posts for Rails. Self-hosted, no third-party
+> script, no MAU tax.
 
 ## Goals
 
 - Install in under 5 minutes on a fresh Rails app.
 - Rails 7.1+, Ruby 3.2+, mountable engine, isolated namespace `ProductTours`.
-- Store guides, steps, progress, and events in host-app tables.
-- Place guides by stable developer-facing keys.
-- Let admins edit content, ordering, status, CTA, and media without a deploy.
-- Let the host invoke guides after success events, not only button clicks.
+- Store posts, progress, and events in host-app tables.
+- Invoke posts by stable developer-facing keys.
+- Keep `key` unique per locale.
+- Let admins edit title, rich description, optional video, CTA, status, and locale
+  without a deploy.
+- Let the host invoke posts after success events, not only button clicks.
 - Support signed-in and anonymous visitors.
-- Support multi-tenant apps via an opaque tenant key.
-- Support eligibility via host-provided segments, not user-data sync.
+- Track views/completions by user, tenant, or user+tenant when the host provides
+  those identifiers.
 - Work with plain Rails views, Turbo Drive, and strict nonce-based CSP.
-- No Tailwind, Stimulus, importmap, node, npm, CDN, or asset-pipeline assumptions.
+- No Tailwind, Stimulus, importmap, node, npm, CDN, or asset-pipeline
+  assumptions.
 - Enough analytics to answer: who saw this, who dismissed it, who completed it.
 
 ## Non-Goals
 
 Absolute non-goals for v1:
 
-- **No DOM-anchored tooltip tours** (no popover pinned to a host element, no
-  positioning engine, no `data-*-anchor` markers).
+- No DOM-anchored tooltip tours.
+- No multi-step prev/next process tours.
+- No `ProductTours::Step` model.
+- No checklists.
 - No external hosted service; no third-party tracking script.
 - No syncing users/accounts into a vendor database.
-- No visual builder, AI authoring, or chatbot.
-- No mobile SDKs.
-- No testimonial or feedback collection (sibling gems own those).
-- No media creation/hosting; the gem accepts video links (and later, uploads).
+- No visual builder, AI authoring, chatbot, or mobile SDK.
+- No testimonial, feedback, bug, or support collection.
+- No media creation; the gem accepts safe video URLs or uploaded videos.
 - No enterprise workflow suite: roles, approvals, SAML, experiments, governance.
+- Non-video file uploads outside Action Text attachments.
 
 Deferred until real demand:
 
+- Optional always-open resource center / guides launcher.
 - Advanced analytics charts.
-- Active Storage uploads for media (schema is upload-ready; see below).
-- `auto` and `completion` trigger modes.
-- Deep integrations (Segment, Amplitude, Mixpanel, Slack, …). Hooks and recipes
-  come first.
+- Deep integrations with Segment, Amplitude, Mixpanel, Slack, etc.
+- Automatic page-load invocation.
 
 ## Product Principles
 
+- **Post, not process.** A `Post` is a single invokable guidance unit with one
+  outcome.
 - **Rails-native beats no-code.** The win is native placement, auth, tenancy,
   I18n, and persistence.
-- **Self-contained UI.** The widget renders its own modals/cards and never
-  touches the host DOM.
-- **Developer-placed, admin-managed.** Code defines where guidance may appear;
+- **Self-contained UI.** The widget renders its own modal/card and never touches
+  the host DOM.
+- **Developer-placed, admin-managed.** Code defines where posts may appear;
   admins manage content and publishing.
-- **Intent beats interruption.** Explicit clicks, success moments, and
-  checklists over surprise auto-starts.
-- **Calm product scope.** Basecamp-style: the small thing that solves the real
-  Rails problem. Fewer settings, documented escape hatches, no platform sprawl.
-- **One guide, one outcome.** A guide drives a single activation milestone.
-- **Self-hosted by default.** Content and events stay in the host database.
-- **Small frontend, strong backend.** Plain JS for playback/modals; Active
-  Record for content, eligibility, and analytics.
+- **Intent beats interruption.** Explicit clicks and success moments over
+  surprise auto-starts.
+- **Small frontend, strong backend.** Plain JS for modals/playback; Active Record
+  for content, eligibility, progress, and analytics.
 - **Strict CSP is table stakes.** Same-origin scripts, nonce support, no inline
   handlers.
-- **Screenshots sell the gem.** The README must show a polished modal, video
-  guide, multi-step modal, checklist, and dashboard before wide announcement.
-
-## Boundaries With Sibling Gems
-
-- `testimonials` — testimonials, video reviews, consent, public collection.
-- `ideasbugs` — private feedback, bugs, feature requests, triage.
-- `livechat` — user-to-team support messaging.
-- `i18n_proofreading` — translation review.
-- `product_tours` — product guidance: "show this user how to complete this
-  workflow now."
-
-Integration through hooks and docs, not duplicated surface: a completed guide
-may trigger `testimonial_prompt!` in host code, but `product_tours` ships no
-review prompt of its own.
 
 ## Reference Gem Patterns To Reuse
 
@@ -173,160 +128,131 @@ Follow the shipped-gem house architecture:
 - Request-dependent lambdas receive the raw request.
 - Dashboard access defaults to development only; public/user endpoints are
   independently gated by `enabled`.
-- Loose host references: `author_id`, `visitor_token`, `tenant` are strings, not
-  foreign keys.
+- Loose host references in tracking rows: `author_id`, `visitor_token`, and
+  `tenant` are strings, not foreign keys.
 - Optional model concern via `ActiveSupport.on_load(:active_record)`; widget
   helper via `:action_view`; controller helper via `:action_controller`.
 - Widget JS and dashboard JS live in `lib/product_tours/*.js`, served same-origin
   by the engine with content fingerprints.
 - Helpers emit a `type="application/json"` config script plus a same-origin
-  `defer` script — the Turbo/CSP-safe pattern from the other gems.
+  `defer` script.
 - Runtime dependency: Rails only, unless overwhelmingly justified.
 - Minitest, not RSpec; `test/dummy` app with fixed-nonce CSP tests.
-- CI matrix: Rails 7.1/7.2/8.0/8.1 × Ruby 3.2/3.3/3.4.
+- CI matrix: Rails 7.1/7.2/8.0/8.1 x Ruby 3.2/3.3/3.4.
 - 26 locale files with a parity test.
-- README: badges, one-line positioning, screenshot/GIF, install, "What you get",
-  "Why self-host", flow screenshots, config table, multi-tenancy, Turbo/CSP,
-  tests. Keep-a-Changelog `CHANGELOG.md`. Trusted-publishing release on `v*`.
-- Mobile: full-screen modal at ≤480px with the `visualViewport` keyboard fix,
-  16px inputs, safe-area padding, contained overscroll (the family convention).
-
-## Personas
-
-1. **End user** — signed-in or anonymous, learning a workflow in the host app.
-2. **Customer admin** — tenant-side admin completing setup / discovering features.
-3. **Product/support/admin** — manages guide content, watches counts, retires
-   stale guides.
-4. **Host developer** — installs the gem, places triggers, wires auth, tenant,
-   segments, and completion events.
+- Mobile: full-screen modal at <=480px with the `visualViewport` keyboard fix,
+  16px inputs, safe-area padding, contained overscroll.
 
 ## Core Product Surface
 
-### 1. Guide Library
+### 1. Post Library
 
-A guide is the base content unit, presented as a modal, inline embed, or (v0.2)
-checklist item. v0.1 supports:
+A post is the base content unit. Product copy can still say "product tour", but
+the primary Active Record model is `ProductTours::Post`.
 
-- single modal guides (title/body/CTA)
-- video guides (modal or inline)
-- **multi-step modal guides** — a centered, paginated modal ("1 of N",
-  Back/Next), attached to nothing
-- inline embed guides
-- CTA links
-- `product_tour_prompt!` / `product_tour_complete!` from controller code
-- `shown` / `started` / `viewed` / `step_viewed` / `dismissed` / `completed` /
-  `cta_clicked` events
-- tenant scoping
-- eligibility by segment
+v0.1 supports:
 
-v0.2: onboarding checklists; show-once / show-until-completed behavior.
+- visible button/link invocation
+- optional inline embedding
+- title, optional rich description, optional video URL/upload, CTA label, and CTA
+  URL
+- `product_tour_button(:key)` / `product_tour_link(:key)` /
+  `product_tour_modal(:key)` / `product_tour_embed(:key)`
+- `product_tour_prompt!(key)` / `product_tour_complete!(key)` from controller code
+- `shown` / `started` / `viewed` / `dismissed` / `completed` / `cta_clicked`
+  events
+- tracking by user, tenant, or user+tenant
+- locale-specific records
 
-An always-available in-app `Guides` launcher is explicitly parked (revisit at
-v0.4, after the core loop is polished).
+There is no step editor, no Back/Next UI, and no post sequence in v0.1.
 
-### 2. Multi-Step Modal Guides
-
-A guide with more than one step renders as a single centered modal that
-paginates through its steps — **not** a DOM walkthrough.
+### 2. Post Rendering
 
 Behavior:
 
-- Each step supports title, body, optional video/media URL, primary CTA, and a
-  secondary "Skip/Close".
-- Progress text ("Step 2 of 3") for multi-step guides; Back/Next controls.
+- A post opens as one centered modal or renders as one inline card/player.
 - Keyboard: Escape dismisses; Enter/Space activate controls; focus is trapped
   while the modal is open.
-- Mobile: full-screen modal (family convention), keyboard-safe via
-  `visualViewport`.
-- A guide with no renderable steps does not open.
-- Playback stops when the modal closes (the player node is removed).
+- Mobile: full-screen modal, keyboard-safe via `visualViewport`.
+- A post with no renderable title/description/video does not open.
+- Closing a modal removes the player node so playback stops.
 
 All plain JS in the gem; no third-party overlay library, because there is no
-positioning to solve.
+positioning or sequence engine to solve.
 
-### 3. Video Guides
+### 3. Optional Video
 
-Video is one guide format, not the whole product. v0.1 providers:
+Video is optional content on a post, not a separate post type. v0.1 supports:
 
 - YouTube, Vimeo, Loom, Tella, Voomly, and direct MP4/WebM URLs.
+- Active Storage video uploads via `has_one_attached :video`.
 
-Resolver (offline, security-critical — the last line of defense):
+Resolver:
 
 - A dedicated resolver object parses URLs and derives embeddable player URLs.
 - Accept only HTTPS URLs from known provider hosts. Unsupported hosts, non-video
   paths, invalid URLs, lookalike hosts, and non-HTTPS schemes resolve to no
-  embed — never an arbitrary iframe.
+  embed.
 - YouTube normalizes watch/shorts/live/embed/`youtu.be` to
   `youtube-nocookie.com/embed/<id>?rel=0&modestbranding=1`.
 - Vimeo preserves unlisted privacy hashes.
+- Loom, Tella, and Voomly are v0.1 providers because real launch content already
+  lives there.
 - Voomly accepts iframe embed URLs and share/embed URLs from Voomly's video
-  drive; v0.1 treats it as an iframe player and records `viewed` (player-API
-  completion can come later).
-- Direct media URLs use a native `<video>` player.
+  drive; v0.1 treats it as an iframe player and records `viewed`.
+- Direct video URLs and uploaded videos use a native `<video>` player.
 - Record `completed` only where completion can be detected reliably; otherwise
   fall back to `viewed`/`dismissed`.
-- Never require Active Storage in v0.1; never record video in the browser.
+- Never record video in the browser.
+- Non-video uploads are only supported inside Action Text attachments; no
+  separate file-upload field ships in v0.1.
 
-oEmbed (dashboard-only, admin convenience — never on the end-user render path):
+oEmbed is dashboard-only admin convenience:
 
-- Provider oEmbed fetchers for YouTube and Vimeo first (keyless public
-  endpoints). Wistia later only if the resolver is already clean.
-- On save/preview of a URL, offer "Fetch video data" to prefill **blank** fields
-  (guide title, provider title, thumbnail URL, provider, provider id, embed URL).
-  Never silently overwrite admin-edited fields; an explicit "Refresh video data"
-  may replace generated provider metadata after confirmation.
-- Persist practical normalized fields; store the raw payload in
-  `metadata["oembed"]` only when useful.
-- Network failure must never block saving a guide.
+- YouTube, Vimeo, Loom, Tella, and Voomly should all resolve safely in v0.1.
+  oEmbed/prefill can start with providers that expose stable public metadata,
+  but lack of metadata must never block saving or rendering a safe URL.
+- "Fetch video data" prefills blank fields only: post title, provider title,
+  thumbnail URL, provider, provider id, and embed URL.
+- Never silently overwrite admin-edited fields.
+- Network failure must never block saving a post.
 
-Upload-ready media design (columns exist from the first migration so uploads are
-additive later):
+### 4. Invocation
 
-- `video_url` (original pasted URL), `embed_url` (normalized player URL),
-  `thumbnail_url`, `captions_url`, `provider`, `provider_id`, `provider_title`,
-  `media_kind` (`url` in v0.1; `upload` later).
-- When uploads arrive, attach files separately but expose them through the same
-  player-facing methods; an upload wins over a URL at render time, URL remains as
-  fallback metadata. Purge removed uploads after commit, not inside the save
-  transaction. The gem never generates thumbnails, transcodes, or edits captions.
+The post record stores content. The way it appears is decided by the invocation,
+not by columns on `ProductTours::Post`.
 
-### 4. Checklists (v0.2)
+`product_tour_button(:key)` renders visible UI that opens the post in a modal.
+Use it when the user should choose to open the post:
 
-- `product_tour_checklist(:onboarding)` renders a self-styled checklist.
-- Ordered items; each launches a guide, navigates to a URL, or completes from a
-  host completion event.
-- Progress stored per visitor/user/tenant.
-- Hides when all required items complete, unless configured to remain available.
+```erb
+<%= product_tour_button(:billing_setup) %>
+```
 
-The v0.1 schema must not block this.
+`product_tour_modal(:key)` renders no button and directly mounts modal-opening
+state for the current render. Use it when the host view already has its own
+trigger or wants to open the post from custom UI.
 
-### 5. Server-Side Prompts And Completion
+`product_tour_embed(:key)` renders the same post inline in the page.
 
-The host app knows success moments — copy the `testimonials` pattern:
+`product_tour_prompt!(:key)` renders no UI. It queues modal invocation for the
+next eligible HTML render. Use it after the host app knows something happened:
 
 ```ruby
 class BillingController < ApplicationController
   def update
     # ...
-    product_tour_complete!(:billing_setup)
     product_tour_prompt!(:invite_team)
     redirect_to billing_path
   end
 end
 ```
 
-- `product_tour_prompt!(key)` stores a flash-like signal for the next HTML
-  render (a v0.1 requirement — guides must be invokable from success events like
-  "invoice created", "team invited", "billing connected").
-- Auto-prompting respects recurrence; explicit clicks bypass recurrence.
+- `product_tour_prompt!(key)` stores a flash-like signal for the next HTML render.
+- Prompted modal invocation respects recurrence; explicit clicks bypass
+  recurrence.
 - `product_tour_complete!(key)` records completion for the current
   user/visitor/tenant and creates a `completed` event.
-
-### 6. Guides Launcher (parked, v0.4)
-
-An optional always-available launcher listing eligible guides/checklists.
-Explicit parking-lot idea — no schema, routes, helpers, or config until the core
-guide/checklist product is useful in a real app.
 
 ## Installation
 
@@ -339,13 +265,18 @@ bin/rails db:migrate
 The installer creates an initializer, a migration, the engine mount route, and
 post-install instructions. Default mount path `/product_tours`.
 
+If Active Storage is not installed, the installer tells the host to run
+`bin/rails active_storage:install` before using video uploads. If Action Text is
+installed, posts expose `has_rich_text :description`; otherwise description is
+disabled instead of falling back to a plain text column.
+
 ```erb
 <%= product_tours_tag %>
 ```
 
 Post-install output: run `rails db:migrate`; add `<%= product_tours_tag %>`
-before `</body>`; manage guides at `/product_tours`; dashboard is development-
-only until `config.authorize_admin` is set.
+before `</body>`; manage posts at `/product_tours`; dashboard is
+development-only until `config.authorize_admin` is set.
 
 ## Configuration
 
@@ -355,123 +286,146 @@ ProductTours.configure do |config|
   config.authorize_admin = ->(_request) { Rails.env.development? }
   config.current_user = ->(_request) {}
   config.tenant = ->(_request) {}
+  config.locale = ->(_request) { I18n.locale }
   config.author_label = ->(user) { user.try(:name).presence || user.try(:email).presence || user&.to_s }
   config.visitor_label = ->(user) { user.try(:name).presence || user.try(:email).presence || user&.to_s }
-  config.segments = ->(_request) { [] }
   config.mount_path = "/product_tours"
   config.rate_limit = { to: 60, within: 1.minute }
   config.accent_color = nil
-  config.on_event = ->(_event) {}
-  config.on_complete = ->(_progress) {}
 end
 ```
 
 - `enabled` gates end-user helpers, widget rendering, and public endpoints.
 - `authorize_admin` gates the dashboard; development-only by default.
 - `current_user` returns an object responding to `id`, or `nil`.
-- `tenant` returns an opaque string key, or `nil` for a global installation.
+- `tenant` returns an opaque tracking key, or `nil` when tenant-level tracking is
+  not needed.
+- `locale` returns the lookup locale for button/link/embed helpers and
+  `product_tour_prompt!(:key)`; defaults to `I18n.locale`.
 - `author_label` / `visitor_label` store display labels for analytics.
-- `segments` returns an array of strings, e.g. `["admin", "trial",
-  "billing_incomplete"]`.
 - `mount_path` must match the engine route.
 - `rate_limit` uses Rails 7.2+ rate limiting; no-ops on 7.1.
 - `accent_color` restyles widget controls with automatic contrast.
-- `on_event` / `on_complete` run after the record is created; keep them fast.
 
 ## Data Model
 
 Engine-prefixed table names.
 
-### ProductTours::Tour
+### ProductTours::Post
 
-Fields: `key`, `status`, `kind`, `title`, `description`, `video_url`,
-`embed_url`, `thumbnail_url`, `captions_url`, `provider`, `provider_id`,
-`provider_title`, `media_kind`, `cta_label`, `cta_url`, `segments`, `trigger`,
-`recurrence`, `priority`, `tenant`, `position`, `metadata`.
+Primary content record. This is the record looked up by
+`product_tour_button(:key)`, `product_tour_modal(:key)`,
+`product_tour_embed(:key)`, `product_tour_prompt!(:key)`, and
+`window.ProductTours.open("key")`.
+
+Fields: `key`, `locale`, `status`, `title`, `video_url`, `video_metadata`,
+`cta_label`, `cta_url`, `recurrence`, `priority`, `position`, `metadata`.
 
 ```ruby
-enum :status, %w[draft published archived].index_by(&:itself)
-enum :kind, %w[modal video embed checklist].index_by(&:itself)
-enum :trigger, %w[manual success].index_by(&:itself)
+enum :status, %w[draft published].index_by(&:itself)
 enum :recurrence, %w[show_once until_completed always].index_by(&:itself)
 ```
 
 Rules:
 
-- `key` is stable and developer-facing.
-- `published` tours are visible to eligible end users.
-- `tenant` is opaque; `nil` = global.
-- A single modal or video guide is a tour with one step; a multi-step modal has
-  many. `checklist` arrives in v0.2.
-- `video_url` is the pasted URL; `embed_url` the normalized player URL.
-- `segments`, `recurrence` config, and `metadata` are JSON columns where
-  supported, else Rails-serialized text.
+- `key` is stable, developer-facing, and supplied by the host app/user.
+- `key` must match `/\A[a-z0-9]+(?:[._-][a-z0-9]+)*\z/`; examples:
+  `billing_setup`, `invite.team`, `welcome-1`.
+- The dashboard enforces the key format client-side while creating/editing posts,
+  and the model enforces the same validation server-side.
+- `locale` is required and defaults to `I18n.default_locale`.
+- `key` is unique per `locale`; the same key may exist in multiple locales for
+  translated post content.
+- Helper lookup uses `config.locale` and does not silently fall back to another
+  locale in v0.1.
+- `title` is required.
+- `description` is optional and exists only as `has_rich_text :description` when
+  Action Text is available. There is no plain-text `description` column.
+- If Action Text is unavailable, the dashboard hides the description editor and
+  posts render with title/video/CTA only.
+- `published` posts are visible to eligible end users.
+- `video_url` is the pasted URL.
+- `video_metadata` is JSON/JSONB and stores derived provider data such as
+  `embed_url`, `thumbnail_url`, `captions_url`, `provider`, `provider_id`, and
+  `provider_title`.
+- `has_one_attached :video` supports uploaded video. Uploaded video wins at
+  render time; `video_url` remains optional fallback/source metadata.
+- Video source is computed at render time: uploaded video if attached, otherwise
+  `video_url` if present.
+- `recurrence` config and `metadata` are JSON columns where supported, else
+  Rails-serialized text.
 - `recurrence`: `show_once` (default), `until_completed`, `always`.
-- `trigger`: `manual` (helper/JS only) or `success` (queued by
-  `product_tour_prompt!`, opened on the next eligible render). `auto` and
-  `completion` are deferred.
+- There is no `display_mode` column; modal vs inline is an invocation choice.
+- There is no `trigger` column; visible button, inline render, direct modal, and
+  prompted modal are invocation choices.
 
-Indexes: unique `[tenant, key]`; `status`; `kind`; `[tenant, status]`; `priority`.
+Indexes: unique `[locale, key]`; `locale`; `status`; `priority`.
 
-### ProductTours::Step
+### ProductTours::Post::Progress
 
-Fields: `tour_id`, `key`, `position`, `title`, `body`, `video_url`, `cta_label`,
-`cta_url`, `completion_key`, `metadata`.
-
-Rules:
-
-- Steps belong to a tour; `key` is stable within the tour.
-- `completion_key` is optional and lets a step (or a v0.2 checklist item)
-  complete from a host-side event.
-- Steps render as pages of a centered modal; no positioning/anchoring.
-
-Indexes: unique `[tour_id, key]`; `[tour_id, position]`; `completion_key`.
-
-### ProductTours::Progress
-
-Fields: `tour_id`, `tenant`, `author_id`, `visitor_token`, `status`,
-`started_at`, `completed_at`, `dismissed_at`, `last_step_key`, `metadata`.
+Fields: `post_id`, `tenant`, `author_id`, `visitor_token`, `status`,
+`started_at`, `completed_at`, `dismissed_at`, `metadata`.
 
 ```ruby
 enum :status, %w[not_started started dismissed completed].index_by(&:itself)
 ```
 
-Rules: `author_id`/`visitor_token` are strings; signed-in progress keys by
-`author_id`, anonymous by `visitor_token`. Supports show-once and
-show-until-completed.
+Rules:
 
-Indexes: `[tour_id, status]`; `[tenant, author_id, tour_id]`;
-`[tenant, visitor_token, tour_id]`; `completed_at`.
+- `author_id`, `tenant`, and `visitor_token` are strings, not foreign keys.
+- `belongs_to :post, class_name: "ProductTours::Post"`; progress cannot exist
+  without a post.
+- Signed-in progress can be scoped by `author_id`.
+- Tenant progress can be scoped by `tenant`, allowing "anyone in this tenant has
+  viewed/completed this post" checks.
+- User+tenant progress can be scoped by both `author_id` and `tenant`.
+- Anonymous progress can be scoped by `visitor_token`.
+- Supports show-once and show-until-completed.
 
-### ProductTours::Event
+Indexes: `[post_id, status]`; `[tenant, author_id, post_id]`;
+`[tenant, post_id]`; `[author_id, post_id]`; `[visitor_token, post_id]`;
+`completed_at`.
 
-Fields: `tour_id`, `step_id`, `action`, `tenant`, `author_id`, `author_label`,
+### ProductTours::Post::Event
+
+Fields: `post_id`, `action`, `tenant`, `author_id`, `author_label`,
 `visitor_token`, `page_url`, `locale`, `metadata`.
 
 ```ruby
 enum :action, %w[
-  shown started viewed step_viewed dismissed completed cta_clicked
+  shown started viewed dismissed completed cta_clicked
 ].index_by(&:itself)
 ```
 
-Rules: `author_id`/`visitor_token` are strings; `page_url` strips query strings
-by default; `metadata` is documented non-sensitive JSON only. (No `user_agent`
-column — we don't store PII we never surface.)
+Rules:
 
-Indexes: `[tour_id, action]`; `[step_id, action]`; `tenant`; `author_id`;
-`visitor_token`; `created_at`.
+- `author_id`, `tenant`, and `visitor_token` are strings, not foreign keys.
+- `belongs_to :post, class_name: "ProductTours::Post"`; events cannot exist
+  without a post.
+- `tenant` is tracking context only; it does not scope post content.
+- `page_url` strips query strings by default.
+- `metadata` is documented non-sensitive JSON only.
+- No `user_agent` column.
 
-## Multi-Tenancy
+Indexes: `[post_id, action]`; `tenant`; `author_id`; `visitor_token`;
+`created_at`.
+
+## Tracking Scope
 
 ```ruby
 config.tenant = ->(_request) { Current.organization&.to_gid&.to_s }
 ```
 
-- Dashboard reads/writes tours for the current tenant; global tours have
-  `tenant: nil`.
-- A tenant-specific tour overrides a global tour with the same key; end-user
-  helpers resolve tenant-specific first, then fall back to global.
-- Progress and events are stamped with the current tenant.
+- Posts are not tenant-scoped. A published post is one content record per
+  locale/key.
+- Progress and events may be stamped with `author_id`, `visitor_token`, and
+  `tenant`.
+- Reporting must support user scope (`author_id`), tenant scope (`tenant`), and
+  user+tenant scope (`author_id` + `tenant`).
+- Tenant-level reporting answers questions like: "Has anyone in this tenant
+  viewed or completed this post?"
+- If the host does not provide a tenant, tracking still works by signed-in user
+  or anonymous visitor token.
 
 Optional sugar, matching `has_testimonials` / `has_feedback`:
 
@@ -481,31 +435,26 @@ class Organization < ApplicationRecord
 end
 ```
 
-## Eligibility, Targeting, And Recurrence
+## Eligibility And Recurrence
 
-v0.1 targeting is deliberately small:
+v0.1 eligibility is deliberately small:
 
-- tenant match
 - status published
-- segment intersection (`config.segments` ∩ tour `segments`; empty = all)
 - recurrence
 
 ```ruby
-segments: ["admin", "trial"]
 recurrence: "until_completed"   # show_once | until_completed | always
-trigger: "manual"               # manual | success
 ```
 
 Rules:
 
-- Empty `segments` means all segments.
-- Explicit user action bypasses recurrence but not `enabled`, status, tenant, or
-  segment eligibility.
-- Default created tours are `manual` — no surprise auto-starts.
+- Explicit user action bypasses recurrence but not `enabled` or status.
+- Posts never auto-start by themselves; they appear only through helper, JS, or
+  queued prompt invocation.
 
-(No `page_rules` and no `auto` trigger in v0.1: manual and success-event guides
-are placed exactly where the developer wants them, so path matching is
-redundant until an `auto` mode exists.)
+No `page_rules` and no automatic page-load invocation in v0.1. Button-rendered,
+inline, direct modal, and server-prompted posts are placed exactly where the
+developer wants them, so path matching is redundant.
 
 ## View Helpers And JS API
 
@@ -513,19 +462,26 @@ redundant until an `auto` mode exists.)
 <%= product_tours_tag %>
 <%= product_tour_button(:billing_setup) %>
 <%= product_tour_link(:billing_setup, "Watch setup guide") %>
+<%= product_tour_modal(:billing_setup) %>
 <%= product_tour_embed(:billing_setup) %>
 ```
 
 Behavior:
 
-- Render nothing if the tour is missing, unpublished, disabled, or ineligible.
+- Render nothing if the post is missing, unpublished, or disabled.
+- Button, link, modal, embed, prompt, and JS invocation all refuse unpublished
+  posts. Unpublishing a post in the dashboard removes it from every host page
+  without changing code at those invocation sites.
 - `product_tours_tag` emits the JSON config and the same-origin widget script.
 - Button/link helpers render the gem's own small, self-styled controls and open
-  the guide without a full page reload.
-- Embed helper renders an inline card/player.
-- Opening a guide records `started`/`viewed`; each visible step records
-  `step_viewed`; closing before completion records `dismissed`; CTA clicks record
-  `cta_clicked`; finishing all required steps records `completed`.
+  the post without a full page reload.
+- Modal helper renders no visible control and prepares the post to open in a
+  modal on the current render.
+- Embed helper renders the post inline as a card/player.
+- `product_tour_prompt!(:key)` renders no visible control; it asks the widget to
+  open that post on the next eligible HTML page.
+- Opening a post records `started`/`viewed`; closing before completion records
+  `dismissed`; CTA clicks record `cta_clicked`; completing records `completed`.
 - Closing a modal removes the player node so playback stops.
 
 ```js
@@ -539,17 +495,17 @@ product events and custom flows.
 
 ## Dashboard
 
-Mounted at `/product_tours`. Pages: guide index, new/edit/show guide, step
-editor, event summary, progress summary. Index filters: status, kind, key,
-tenant, segment, recently viewed.
+Mounted at `/product_tours`. Pages: post index, new/edit/show post, event
+summary, progress summary. Post index filters: status, locale, key, recently
+viewed. Event/progress filters also include tenant and user.
 
 - Development-only by default; host-configured admin gate for production.
 - No host CSS dependency; self-contained light/dark theme via CSS custom
   properties; no inline handlers; same-origin fingerprinted `dashboard.js`.
-- Preview video URLs on show/edit.
-- "Fetch video data" uses provider/oEmbed metadata to prefill blank title,
-  provider title, thumbnail, provider, provider id, and embed URL.
-- Simple event counts per guide; a stale-guide warning when no events arrive
+- Preview video URLs and uploaded videos on show/edit.
+- "Fetch video data" uses provider/oEmbed metadata to prefill blank title and
+  store derived provider data in `video_metadata`.
+- Simple event counts per post; stale-post warning when no events arrive
   recently.
 
 ## I18n
@@ -557,157 +513,148 @@ tenant, segment, recently viewed.
 - Ship the same 26 locales as the sibling gems; every widget/dashboard string
   through `I18n.t` with an English default; RTL detection mirrors the family
   pattern.
-- v0.1 stores guide content as plain strings; localized guide fields are v0.3.
+- v0.1 stores localized post content as separate post records keyed by
+  `[locale, key]`; localized field bundles are not needed.
 
 ## Privacy And Security
 
 - Dashboard gated outside development; end-user write endpoints rate-limited.
 - Never store full request params; strip query strings from `page_url`.
 - Host user references are loose strings, not FKs.
-- Never expose raw Active Storage blob URLs if uploads are added later.
+- Never expose raw Active Storage blob URLs for uploaded videos or Action Text
+  attachments.
 - Same-origin scripts with request nonces; no inline handlers; escape `</` in
   JSON config script tags.
 - Event metadata documented as non-sensitive.
-- Ship `ProductTours::Event.prune(older_than:)` or a documented retention recipe
-  before v1.0.
+- Ship `ProductTours::Post::Event.prune(older_than:)` or a documented retention
+  recipe before v1.0.
 
 ## Accessibility
 
 - Buttons have labels and keyboard behavior.
 - Modal uses `role="dialog"` + focus trap; Escape dismisses; controls reachable
-  by keyboard; ARIA labels for next/previous/close/dismiss/progress.
+  by keyboard; ARIA labels for close/dismiss/progress.
 - Respect `prefers-reduced-motion`.
-- Never trap a user in a guide with no visible exit.
+- Never trap a user in a post with no visible exit.
 
 ## Acceptance Criteria
 
 - Fresh install works in a Rails 7.1+ dummy app; the generated initializer boots
   with safe defaults.
 - Dashboard is inaccessible outside development unless `authorize_admin` allows.
+- `ProductTours::Post` exists as the primary invokable model.
+- `ProductTours::Post` has no `tenant` column; tenant is tracking context only.
+- `ProductTours::Post` has no `display_mode` column and no `trigger` column.
+- `ProductTours::Post` has no plain-text `description` column. Description is
+  `has_rich_text :description` only when Action Text is available.
+- Provider/oEmbed data is stored in `video_metadata`, not one column per provider
+  attribute.
+- `ProductTours::Post.status` has only `draft` and `published`.
+- `ProductTours::Post.key` is validated server-side and client-side with
+  `/\A[a-z0-9]+(?:[._-][a-z0-9]+)*\z/`.
+- There is no `ProductTours::Step` model and no prev/next modal flow.
 - `product_tours_tag` serves same-origin JS with a content fingerprint; works
   under Turbo Drive and nonce-based CSP.
-- `product_tour_button(:key)` renders only for a published, eligible tour and
-  opens the guide without a full page reload.
-- `product_tour_prompt!(:key)` opens the guide on the next eligible HTML render
+- `product_tour_button(:key)` renders only for a published post and
+  opens the current-locale post without a full page reload.
+- Button/link/modal/embed/prompt/JS invocation render or open nothing when the
+  post is not `published`.
+- `product_tour_prompt!(:key)` opens the post on the next eligible HTML render
   without a user click.
-- `product_tour_embed(:key)` renders an inline player/card.
-- A multi-step modal paginates and completes; Back/Next and progress work.
+- `product_tour_modal(:key)` invokes the current-locale post as a modal without
+  rendering a visible control.
+- `product_tour_embed(:key)` renders the current-locale post inline.
 - Unsafe/unsupported video URLs never render an iframe; YouTube uses the nocookie
   host; Vimeo unlisted URLs keep their privacy hash; Voomly share/embed URLs
   render and record at least `viewed`.
-- "Fetch video data" fills/suggests `provider_title`, `thumbnail_url`, and
-  `embed_url` for YouTube/Vimeo without an API key; a failed fetch shows a help
-  message but never blocks saving the URL.
-- Opening records `started`/`viewed`; a step records `step_viewed`; closing
-  unfinished records `dismissed`; closing stops playback (player node removed);
-  CTA clicks record `cta_clicked`; completing records `completed` and updates
-  progress.
-- Tenant-specific tours override global tours with the same key; segment
-  eligibility works from `config.segments`.
-- Tests cover helpers, dashboard auth, guide lifecycle, step ordering, event
-  recording, progress, tenant scoping, segment eligibility, video URL resolving,
-  Turbo, and CSP.
+- Loom, Tella, and Voomly URLs resolve safely in v0.1.
+- Uploaded videos render through a native `<video>` player.
+- "Fetch video data" stores provider metadata in `video_metadata` where provider
+  metadata is available; a failed fetch shows a help message but never blocks
+  saving the URL.
+- Opening records `started`/`viewed`; closing unfinished records `dismissed`;
+  closing stops playback; CTA clicks record `cta_clicked`; completing records
+  `completed` and updates progress.
+- The same key can exist in different locales; helper lookup uses `config.locale`
+  and does not silently fall back to another locale in v0.1.
+- Tests cover helpers, dashboard auth, post lifecycle, event recording, progress,
+  user/tenant tracking scopes, key validation, published-only rendering, video
+  URL resolving, video uploads, Turbo, and CSP.
 
 ## README Positioning
 
 Hero: **Product tours for Rails.**
 
-Subhead: Add guided onboarding, contextual help, video walkthroughs, and
-checklists to your Rails app. Your app, your database, no third-party widget.
+Subhead: Add self-hosted onboarding notes and contextual help to your Rails app.
+Your app, your database, no third-party widget.
 
 What you get:
 
 |                | |
 | -------------- | ------------------------------------------------------------------ |
-| **Guides**     | Modal, video, and multi-step modal guides for onboarding and help  |
-| **Checklists** | Setup tasks and adoption milestones (v0.2)                         |
-| **Dashboard**  | Draft/publish/archive, step editor, usage and completion stats      |
-| **Targeting**  | Tenant and host-defined segments                                    |
-| **Storage**    | Ordinary Active Record rows in your database                        |
-| **Deps**       | None. Plain JS — no Tailwind, Stimulus, importmap, or build step    |
-| **Auth**       | Lambdas over the raw request: Devise, Rails 8 auth, anything        |
-| **i18n**       | 26 languages, RTL included                                          |
-| **Turbo/CSP**  | Turbo Drive and strict nonce-based CSP out of the box               |
+| **Posts**      | Individual guidance posts invoked as modal or inline               |
+| **Dashboard**  | Draft/publish, usage and completion stats                          |
+| **Tracking**   | User, tenant, and user+tenant progress/event scope                 |
+| **Storage**    | Ordinary Active Record rows in your database                       |
+| **Deps**       | None. Plain JS - no Tailwind, Stimulus, importmap, or build step   |
+| **Auth**       | Lambdas over the raw request: Devise, Rails 8 auth, anything       |
+| **i18n**       | Locale-specific posts, 26 UI locales, RTL included                 |
+| **Turbo/CSP**  | Turbo Drive and strict nonce-based CSP out of the box              |
 
 Comparison:
 
 |                        | `product_tours`     | Hardcoded help | Product-tour SaaS |
 | ---------------------- | ------------------- | -------------- | ----------------- |
 | Cost                   | Free, MIT           | Free           | Monthly/MAU based |
-| Where guide data lives | Your database       | Code           | Vendor database   |
+| Where post data lives  | Your database       | Code           | Vendor database   |
 | Third-party script     | No                  | No             | Yes               |
 | Rails user attribution | Server-side session | Manual         | Synced attrs      |
-| Tenant scoping         | Built in            | Manual         | Often paid        |
+| Tenant-aware tracking  | Built in            | Manual         | Often paid        |
 | Admin-managed content  | Yes                 | No             | Yes               |
-| Multi-step modals      | Yes                 | Custom JS      | Yes               |
-| Checklists             | v0.2                | Custom code    | Yes               |
+| Multi-step tours       | No                  | Custom JS      | Yes               |
+| Checklists             | No                  | Custom code    | Yes               |
 | Analytics/events       | In your DB          | Manual         | Vendor dashboard  |
 | Data ownership         | Host-owned          | Host-owned     | Vendor-owned      |
 
-README also includes: install; first guide in under 5 minutes; a success-event
-prompt example; a multi-step modal example; a video-guide example; a Voomly
-example; a checklist example once v0.2 ships; the config table; Devise and
-Rails 8 auth examples; a multi-tenancy example; Turbo/CSP notes; screenshots/GIFs
-of the modal, multi-step modal, video guide, and dashboard; and an explicit
-"why not Appcues/Userflow/Chameleon/Pendo" section.
+README also includes: install; first post in under 5 minutes; a visible button
+example; a success-event prompt example; the config table; Devise and Rails 8
+auth examples; a tracking-scope example; Turbo/CSP notes; screenshots/GIFs of the
+modal, inline embed, and dashboard; and an explicit "why not
+Appcues/Userflow/Chameleon/Pendo" section.
 
 ## Milestones
 
-### v0.1 — Self-contained guide foundation
+### v0.1 - Individual invokable posts
 
-engine skeleton; install generator; initializer; migrations (tours, steps,
-progress, events); `product_tours_tag`; `product_tour_button`/`_link`/`_embed`;
-single modal, video, and multi-step modal guides; video resolver
-(YouTube/Vimeo/Loom/Tella/Voomly/MP4) + YouTube/Vimeo oEmbed prefill;
-`product_tour_prompt!`/`product_tour_complete!`; manual + success triggers;
-event + progress recording; tenant scoping; segment eligibility; dashboard CRUD +
-event/progress summary; Turbo/CSP-safe JS; 26 locales; Minitest + CI matrix;
+Engine skeleton; install generator; initializer; migrations (posts,
+post-progress, post-events); `product_tours_tag`; `product_tour_button`/`_link`/
+`_modal`/`_embed`; modal and inline invocation; video URL resolver
+(YouTube/Vimeo/Loom/Tella/Voomly/MP4) + safe metadata prefill where available;
+`product_tour_prompt!`/`product_tour_complete!`; visible and prompted
+invocation; event + progress recording; user/tenant/user+tenant tracking scopes;
+uploaded videos; Action Text description when available; dashboard CRUD +
+event/progress summary; Turbo/CSP-safe JS; 26 locales; Minitest and CI matrix;
 README screenshots/GIFs.
 
-### v0.2 — Checklists
+### v0.2 - Polish from real usage
 
-`product_tour_checklist`; checklist items over existing steps; show-once /
-show-until-completed; empty-state suppression; seed YAML import/export.
+admin bulk actions; import/export; retention/pruning helper; README demo app.
 
-### v0.3 — Localization and media polish
+### v1.0 - Public launch quality
 
-localized guide fields; Active Storage uploads (using the upload-ready columns);
-mobile polish.
-
-### v0.4 — Guides launcher
-
-optional `product_tours_guides` launcher; eligible guides/checklists list;
-lightweight announcements-as-guides; retention/pruning helper.
-
-### v1.0 — Public launch quality
-
-optional authenticated/admin JSON endpoints (private by default, `testimonials`-
-style opt-in only if a real host needs external rendering); upgrade guide; demo
-app; polished README; screenshots + short demo video; one real Rails SaaS
-adoption story; "good first issue" backlog.
-
-## 5K-Star Strategy
-
-- The first Rails-native Appcues/Userflow/Chameleon/Pendo alternative — minus the
-  brittle DOM-anchoring, which is a feature, not a gap.
-- Copy-paste install; a polished product in the README's first viewport.
-- Emphasize: no third-party script, no MAU tax, no vendor database, no lock-in.
-- Real screenshots, GIFs, and a demo app before broad launch.
-- Comparison sections for the SaaS incumbents.
-- Boring runtime: Rails, Active Record, plain JS.
-- Easy contributor entry: documented architecture, small issues, clear tests.
+Upgrade guide; polished README; screenshots + short demo video; one real Rails
+SaaS adoption story; "good first issue" backlog.
 
 ## Risks And Open Questions
 
-- **Scope creep.** Win by being the Rails-native 80%, not by copying enterprise
-  features. (Anchoring, `auto`/`completion` triggers, `page_rules`, `context`,
-  and analytics charts are already cut/deferred to hold the line.)
+- **Scope creep.** The product is posts, not a workflow builder. Steps,
+  checklists, launchers, anchoring, automatic page-load invocation, page rules,
+  and analytics charts stay out until real usage proves they are worth the cost.
 - **Demand is narrower than the other gems.** Product-tour content is less
   sensitive than chat/feedback/testimonials, so the self-host wedge leans on
-  cost/lock-in rather than data ownership. Real, but thinner — sequence the easy,
-  high-value core first and let a demo + screenshots carry the launch.
+  cost/lock-in and Rails-native control.
 - **Auto-start annoyance.** Default to manual; `auto` stays deferred.
-- **Stale content.** Dashboard shows last-viewed/last-completed so old guides are
+- **Stale content.** Dashboard shows last-viewed/last-completed so old posts are
   easy to retire.
 - **Sensitive URLs.** Strip query strings; document event-metadata hygiene.
 - **Name.** `product_tours` is descriptive, generic, and free on RubyGems as of
@@ -715,10 +662,11 @@ adoption story; "good first issue" backlog.
 
 ## Success Criteria
 
-- Fresh Rails app to first working guide in under 5 minutes.
-- A developer adds a multi-step modal guide with one helper + dashboard content.
-- A non-developer admin updates copy/video/CTA without a deploy.
-- A multi-tenant SaaS scopes guides per tenant with one lambda.
+- Fresh Rails app to first working post in under 5 minutes.
+- A developer adds an invokable modal post with one helper + dashboard content.
+- A non-developer admin updates title/description/video/CTA without a deploy.
+- A SaaS app tracks whether a post was viewed/completed by a user, a tenant, or a
+  user within a tenant.
 - A strict-CSP host has zero console violations.
 - The README makes the product visually obvious within the first screen.
 - The gem can honestly say: "Use this when Appcues/Userflow/Chameleon/Pendo is
