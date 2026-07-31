@@ -72,6 +72,7 @@ Absolute non-goals:
 Deferred until real demand:
 
 - Optional always-open resource center / guides launcher.
+- Linked posts: primary action opens another post by key.
 - Built-in analytics persistence, charts, and reports.
 - Deep integrations with Segment, Amplitude, Mixpanel, Slack, etc.
 - Automatic page-load invocation.
@@ -613,6 +614,29 @@ filters: status, locale, and key.
 - Tests cover the tag helper, dashboard auth, post lifecycle, lifecycle instrumentation
   payloads, key validation, published-only modal opening, viewed modal visibility,
   video URL resolving, video uploads, Turbo, and CSP.
+
+## Future: Linked Posts
+
+Linked posts are the preferred future path for lightweight next/back behavior
+without turning the gem into a process-tour builder.
+
+Concept:
+
+- A post still has one primary action.
+- The primary action can either follow `action_url` or open another published post
+  by key.
+- Future fields may be `action_post_key` and possibly `action_post_locale`.
+- Exactly one target is allowed: `action_url` or `action_post_key`.
+- If the action opens another post, the widget swaps modal content in place.
+- The widget may keep an in-memory back stack for a Back control.
+- No `ProductTours::Step` model, no persisted sequence, no ordered tour builder,
+  and no automatic prev/next flow.
+- Lookup remains stable by locale + key. Arbitrary params should not decide which
+  post is loaded.
+- A small non-sensitive context payload may be carried between linked posts and
+  lifecycle instrumentation, but it should not become a hidden state machine.
+- Invalid/missing/unpublished linked-post targets use the same unresolved-trigger
+  error handling as `data-product-tour`.
 
 ## Risks And Open Questions
 
