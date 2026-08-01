@@ -1,0 +1,9 @@
+bg:
+  product_tours:
+    close: "Затвори"
+    done: "Готово"
+    dialog: "Урок за продукта"
+    video: "Видео урок"
+    unavailable: "Този урок не е наличен."
+    dashboard:
+      title: "Продуктови обиколки"

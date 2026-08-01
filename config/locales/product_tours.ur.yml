@@ -1,0 +1,9 @@
+ur:
+  product_tours:
+    close: "بند کریں"
+    done: "مکمل"
+    dialog: "پروڈکٹ ٹیوٹوریل"
+    video: "ٹیوٹوریل ویڈیو"
+    unavailable: "یہ ٹیوٹوریل دستیاب نہیں ہے۔"
+    dashboard:
+      title: "پروڈکٹ ٹورز"

@@ -1,0 +1,93 @@
+<% content_for :body_class, "pt-index" %>
+
+<div class="title-row">
+  <h1><%= t("product_tours.dashboard.title", default: "Product tours") %></h1>
+  <%= link_to t("product_tours.dashboard.new_post", default: "New post"), new_post_path, class: "button primary" %>
+</div>
+
+<div class="dashboard-shell <%= "has-selected" if @selected_post %>">
+  <aside class="dashboard-sidebar" aria-label="<%= t("product_tours.dashboard.posts", default: "Posts") %>">
+    <nav class="tabs">
+      <% ProductTours::Post::STATUSES.each do |status| %>
+        <%= link_to posts_path(status: status, locale: @locale, q: @query),
+                    class: ("active" if status == @status) do %>
+          <%= status.humanize %>
+          <span class="count"><%= @counts.fetch(status, 0) %></span>
+        <% end %>
+      <% end %>
+    </nav>
+
+    <%= form_with url: posts_path, method: :get, class: "filters" do |form| %>
+      <%= form.hidden_field :status, value: @status %>
+      <%= form.select :locale,
+                      options_for_select([[t("product_tours.dashboard.all_locales", default: "All locales"), ""]] +
+                                         @locales.map { |locale| [locale, locale] }, @locale),
+                      {}, data: { autosubmit: true }, aria: { label: t("product_tours.dashboard.locale", default: "Locale") } %>
+      <%= form.search_field :q, value: @query,
+                            list: "product-tour-key-options",
+                            placeholder: t("product_tours.dashboard.search_key", default: "Search key"),
+                            aria: { label: t("product_tours.dashboard.search", default: "Search") } %>
+      <datalist id="product-tour-key-options">
+        <% @keys.each do |key| %>
+          <%= tag.option value: key %>
+        <% end %>
+      </datalist>
+      <%= form.submit t("product_tours.dashboard.search", default: "Search") %>
+    <% end %>
+
+    <div class="record-list">
+      <% if @posts.any? %>
+        <% @posts.each do |post| %>
+          <% provider = post.resolved_video&.dig(:provider) %>
+          <%= link_to posts_path(status: @status, locale: @locale, q: @query, page: @page, post_id: post.id),
+                      class: ["record-row", ("active" if @selected_post&.id == post.id)].compact do %>
+            <span class="record-main">
+              <span class="record-topline">
+                <span class="badge status-<%= post.status %>"><%= post.status.humanize %></span>
+                <span class="badge locale"><%= post.locale %></span>
+              </span>
+              <span class="record-copy"><%= post.title %></span>
+              <span class="muted record-meta">
+                <code class="key"><%= post.key %></code>
+                <% if provider %><span><%= provider.humanize %></span><% end %>
+              </span>
+            </span>
+            <span class="record-side" aria-hidden="true"><%= provider ? "▶" : "→" %></span>
+          <% end %>
+        <% end %>
+      <% else %>
+        <div class="empty"><%= t("product_tours.dashboard.empty", default: "Nothing here yet.") %></div>
+      <% end %>
+    </div>
+
+    <nav class="pager">
+      <span>
+        <% if @page > 1 %>
+          <%= link_to t("product_tours.dashboard.newer", default: "← Newer"),
+                      posts_path(status: @status, locale: @locale, q: @query, page: @page - 1) %>
+        <% end %>
+      </span>
+      <span>
+        <% if @more %>
+          <%= link_to t("product_tours.dashboard.older", default: "Older →"),
+                      posts_path(status: @status, locale: @locale, q: @query, page: @page + 1) %>
+        <% end %>
+      </span>
+    </nav>
+  </aside>
+
+  <main class="dashboard-detail" aria-label="<%= t("product_tours.dashboard.current_post", default: "Current post") %>">
+    <% if @selected_post %>
+      <p class="mobile-back">
+        <%= link_to t("product_tours.dashboard.back", default: "← All posts"),
+                    posts_path(status: @status, locale: @locale, q: @query, page: @page) %>
+      </p>
+      <%= render "post_panel", post: @selected_post %>
+    <% else %>
+      <div class="empty-state">
+        <h2><%= t("product_tours.dashboard.select_post", default: "Select a post") %></h2>
+        <p class="muted"><%= t("product_tours.dashboard.select_post_hint", default: "Open a post to preview or edit it.") %></p>
+      </div>
+    <% end %>
+  </main>
+</div>

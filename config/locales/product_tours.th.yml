@@ -1,0 +1,9 @@
+th:
+  product_tours:
+    close: "ปิด"
+    done: "เสร็จสิ้น"
+    dialog: "บทแนะนำผลิตภัณฑ์"
+    video: "วิดีโอบทแนะนำ"
+    unavailable: "บทแนะนำนี้ไม่พร้อมใช้งาน"
+    dashboard:
+      title: "ทัวร์ผลิตภัณฑ์"

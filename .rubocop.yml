@@ -1,0 +1,25 @@
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "test/dummy/**/*"
+    - "test/tmp/**/*"
+    - "bin/**/*"
+    - "vendor/**/*"
+    - "tmp/**/*"
+
+Style/Documentation:
+  Enabled: false
+
+Style/AccessorGrouping:
+  Enabled: false
+
+Style/FormatStringToken:
+  EnforcedStyle: template
+
+Metrics:
+  Enabled: false
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false

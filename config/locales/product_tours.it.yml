@@ -1,0 +1,9 @@
+it:
+  product_tours:
+    close: "Chiudi"
+    done: "Fatto"
+    dialog: "Tutorial del prodotto"
+    video: "Video tutorial"
+    unavailable: "Questo tutorial non è disponibile."
+    dashboard:
+      title: "Tour del prodotto"

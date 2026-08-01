@@ -1,0 +1,9 @@
+fr:
+  product_tours:
+    close: "Fermer"
+    done: "Terminé"
+    dialog: "Tutoriel produit"
+    video: "Vidéo du tutoriel"
+    unavailable: "Ce tutoriel n’est pas disponible."
+    dashboard:
+      title: "Visites guidées"

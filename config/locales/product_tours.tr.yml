@@ -1,0 +1,9 @@
+tr:
+  product_tours:
+    close: "Kapat"
+    done: "Bitti"
+    dialog: "Ürün eğitimi"
+    video: "Eğitim videosu"
+    unavailable: "Bu eğitim kullanılamıyor."
+    dashboard:
+      title: "Ürün turları"

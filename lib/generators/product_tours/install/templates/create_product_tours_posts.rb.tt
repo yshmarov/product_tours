@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+class CreateProductToursPosts < ActiveRecord::Migration<%= migration_version %>
+  def change
+    create_table :product_tours_posts do |t|
+      t.string :key, null: false
+      t.string :locale, null: false
+      t.string :status, null: false, default: "draft"
+      t.string :title, null: false
+      t.text :video_url
+      t.json :video_metadata, null: false, default: {}
+      t.string :action_label
+      t.text :action_url
+
+      t.timestamps
+    end
+
+    add_index :product_tours_posts, %i[locale key], unique: true
+    add_index :product_tours_posts, :locale
+    add_index :product_tours_posts, :status
+  end
+end

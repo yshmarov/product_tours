@@ -1,0 +1,9 @@
+ko:
+  product_tours:
+    close: "닫기"
+    done: "완료"
+    dialog: "제품 튜토리얼"
+    video: "튜토리얼 동영상"
+    unavailable: "이 튜토리얼을 사용할 수 없습니다."
+    dashboard:
+      title: "제품 둘러보기"

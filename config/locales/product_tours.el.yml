@@ -1,0 +1,9 @@
+el:
+  product_tours:
+    close: "Κλείσιμο"
+    done: "Τέλος"
+    dialog: "Οδηγός προϊόντος"
+    video: "Βίντεο οδηγός"
+    unavailable: "Αυτός ο οδηγός δεν είναι διαθέσιμος."
+    dashboard:
+      title: "Περιηγήσεις προϊόντος"

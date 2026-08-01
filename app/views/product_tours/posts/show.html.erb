@@ -1,0 +1,5 @@
+<% content_for :body_class, "pt-show" %>
+
+<p class="breadcrumb"><%= link_to t("product_tours.dashboard.title", default: "Product tours"), posts_path %> / <%= @post.title %></p>
+
+<%= render "post_panel", post: @post %>

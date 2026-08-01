@@ -1,0 +1,9 @@
+uk:
+  product_tours:
+    close: "Закрити"
+    done: "Готово"
+    dialog: "Посібник із продукту"
+    video: "Навчальне відео"
+    unavailable: "Цей посібник недоступний."
+    dashboard:
+      title: "Огляди продукту"

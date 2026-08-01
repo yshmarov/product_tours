@@ -1,0 +1,9 @@
+bn:
+  product_tours:
+    close: "বন্ধ করুন"
+    done: "সম্পন্ন"
+    dialog: "পণ্য টিউটোরিয়াল"
+    video: "টিউটোরিয়াল ভিডিও"
+    unavailable: "এই টিউটোরিয়ালটি উপলভ্য নয়।"
+    dashboard:
+      title: "পণ্য পরিচিতি"

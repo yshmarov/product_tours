@@ -1,0 +1,9 @@
+ro:
+  product_tours:
+    close: "Închide"
+    done: "Gata"
+    dialog: "Tutorial de produs"
+    video: "Videoclip tutorial"
+    unavailable: "Acest tutorial nu este disponibil."
+    dashboard:
+      title: "Tururi de produs"

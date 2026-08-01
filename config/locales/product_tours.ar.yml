@@ -1,0 +1,9 @@
+ar:
+  product_tours:
+    close: "إغلاق"
+    done: "تم"
+    dialog: "دليل المنتج"
+    video: "فيديو تعليمي"
+    unavailable: "هذا الدليل غير متاح."
+    dashboard:
+      title: "جولات المنتج"

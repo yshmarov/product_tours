@@ -1,0 +1,9 @@
+hr:
+  product_tours:
+    close: "Zatvori"
+    done: "Gotovo"
+    dialog: "Vodič kroz proizvod"
+    video: "Video vodič"
+    unavailable: "Ovaj vodič nije dostupan."
+    dashboard:
+      title: "Vodiči kroz proizvod"

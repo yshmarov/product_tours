@@ -1,0 +1,9 @@
+id:
+  product_tours:
+    close: "Tutup"
+    done: "Selesai"
+    dialog: "Tutorial produk"
+    video: "Video tutorial"
+    unavailable: "Tutorial ini tidak tersedia."
+    dashboard:
+      title: "Tur produk"

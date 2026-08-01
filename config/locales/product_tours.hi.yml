@@ -1,0 +1,9 @@
+hi:
+  product_tours:
+    close: "बंद करें"
+    done: "पूरा हुआ"
+    dialog: "उत्पाद ट्यूटोरियल"
+    video: "ट्यूटोरियल वीडियो"
+    unavailable: "यह ट्यूटोरियल उपलब्ध नहीं है।"
+    dashboard:
+      title: "उत्पाद परिचय"

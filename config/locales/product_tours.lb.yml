@@ -1,0 +1,9 @@
+lb:
+  product_tours:
+    close: "Zoumaachen"
+    done: "Fäerdeg"
+    dialog: "Produktutorial"
+    video: "Tutorialvideo"
+    unavailable: "Dësen Tutorial ass net verfügbar."
+    dashboard:
+      title: "Produkttouren"

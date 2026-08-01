@@ -1,0 +1,9 @@
+pl:
+  product_tours:
+    close: "Zamknij"
+    done: "Gotowe"
+    dialog: "Samouczek produktu"
+    video: "Film instruktażowy"
+    unavailable: "Ten samouczek jest niedostępny."
+    dashboard:
+      title: "Prezentacje produktu"

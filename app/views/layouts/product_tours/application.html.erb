@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= t("product_tours.dashboard.title", default: "Product tours") %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag "#{dashboard_stylesheet_path}?v=#{ProductTours::Widget.dashboard_stylesheet_fingerprint}",
+                          "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "#{dashboard_script_path}?v=#{ProductTours::Widget.dashboard_fingerprint}",
+                             "data-turbo-track": "reload", defer: true, nonce: true %>
+</head>
+<body class="<%= content_for?(:body_class) ? yield(:body_class) : '' %>">
+  <div class="container">
+    <% if notice.present? %><div class="flash notice"><%= notice %></div><% end %>
+    <% if alert.present? %><div class="flash alert"><%= alert %></div><% end %>
+    <%= yield %>
+  </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+vi:
+  product_tours:
+    close: "Đóng"
+    done: "Xong"
+    dialog: "Hướng dẫn sản phẩm"
+    video: "Video hướng dẫn"
+    unavailable: "Hướng dẫn này không khả dụng."
+    dashboard:
+      title: "Chuyến tham quan sản phẩm"

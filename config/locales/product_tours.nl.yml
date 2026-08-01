@@ -1,0 +1,9 @@
+nl:
+  product_tours:
+    close: "Sluiten"
+    done: "Klaar"
+    dialog: "Producttutorial"
+    video: "Tutorialvideo"
+    unavailable: "Deze tutorial is niet beschikbaar."
+    dashboard:
+      title: "Productrondleidingen"

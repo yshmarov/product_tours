@@ -1,0 +1,9 @@
+"zh-CN":
+  product_tours:
+    close: "关闭"
+    done: "完成"
+    dialog: "产品教程"
+    video: "教程视频"
+    unavailable: "此教程不可用。"
+    dashboard:
+      title: "产品导览"

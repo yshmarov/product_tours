@@ -1,0 +1,9 @@
+ru:
+  product_tours:
+    close: "Закрыть"
+    done: "Готово"
+    dialog: "Руководство по продукту"
+    video: "Обучающее видео"
+    unavailable: "Это руководство недоступно."
+    dashboard:
+      title: "Обзоры продукта"

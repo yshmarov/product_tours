@@ -1,0 +1,50 @@
+<section class="post-panel">
+  <div class="panel-head">
+    <h1><%= post.title %></h1>
+    <div class="post-meta">
+      <code class="key"><%= post.key %></code>
+      <span class="badge locale"><%= post.locale %></span>
+      <span class="badge status-<%= post.status %>"><%= post.status.humanize %></span>
+    </div>
+  </div>
+
+  <div class="detail-scroll">
+    <article class="card pad preview-card">
+      <h2><%= t("product_tours.dashboard.preview", default: "Preview") %></h2>
+      <% video = post.resolved_video %>
+      <% if video %>
+        <div class="video-preview">
+          <% if video[:kind] == "iframe" %>
+            <iframe src="<%= video[:url] %>" title="<%= post.title %>" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+          <% else %>
+            <video src="<%= post.uploaded_video? ? media_path(post) : video[:url] %>" controls preload="metadata"></video>
+          <% end %>
+        </div>
+      <% end %>
+      <% if ProductTours::Post.description_supported? && post.description.present? %>
+        <div class="description-preview"><%= post.description %></div>
+      <% end %>
+      <div class="preview-action"><span class="button primary"><%= post.action_label.presence || t("product_tours.done", default: "Done") %></span></div>
+    </article>
+
+    <article class="card pad details-card">
+      <h2><%= t("product_tours.dashboard.details", default: "Details") %></h2>
+      <dl>
+        <dt><%= t("product_tours.dashboard.video_url", default: "Video URL") %></dt><dd><%= post.video_url.presence || "—" %></dd>
+        <dt><%= t("product_tours.dashboard.action_label", default: "Action label") %></dt><dd><%= post.action_label.presence || t("product_tours.done", default: "Done") %></dd>
+        <dt><%= t("product_tours.dashboard.action_url", default: "Action URL") %></dt><dd><%= post.action_url.presence || "—" %></dd>
+      </dl>
+      <% if post.video_url.present? %>
+        <%= button_to t("product_tours.dashboard.refresh_metadata", default: "Refresh video data"),
+                      refresh_video_metadata_post_path(post), class: "button small refresh-button" %>
+      <% end %>
+      <% if post.video_metadata.present? %><pre class="metadata"><%= JSON.pretty_generate(post.video_metadata) %></pre><% end %>
+    </article>
+
+    <div class="actions">
+      <%= link_to t("product_tours.dashboard.edit", default: "Edit"), edit_post_path(post), class: "button primary" %>
+      <%= button_to t("product_tours.dashboard.delete", default: "Delete"), post_path(post), method: :delete,
+                    class: "danger", form: { data: { confirm: t("product_tours.dashboard.delete_confirm", default: "Delete this post?") } } %>
+    </div>
+  </div>
+</section>

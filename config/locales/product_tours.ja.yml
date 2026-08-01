@@ -1,0 +1,9 @@
+ja:
+  product_tours:
+    close: "閉じる"
+    done: "完了"
+    dialog: "製品チュートリアル"
+    video: "チュートリアル動画"
+    unavailable: "このチュートリアルは利用できません。"
+    dashboard:
+      title: "製品ツアー"
