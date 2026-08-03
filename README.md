@@ -1,126 +1,198 @@
 # product_tours
 
+[![Gem Version](https://img.shields.io/gem/v/product_tours)](https://rubygems.org/gems/product_tours)
+[![Downloads](https://img.shields.io/gem/dt/product_tours)](https://rubygems.org/gems/product_tours)
 [![CI](https://github.com/yshmarov/product_tours/actions/workflows/ci.yml/badge.svg)](https://github.com/yshmarov/product_tours/actions/workflows/ci.yml)
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](MIT-LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](MIT-LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/yshmarov/product_tours?style=social)](https://github.com/yshmarov/product_tours/stargazers)
 
-`product_tours` is a self-hosted Rails engine for in-app product tutorials and
-lightweight multi-step walkthroughs. Your app owns the trigger UI; the gem owns
-the tutorial editor, translations, safe video embeds, and modal navigation.
+**Self-hosted product tours and video tutorials for Rails.** Publish one useful
+guide, open it from any button in your app, or link several guides into a
+Next/Back walkthrough. Your content, videos, translations, and lifecycle events
+stay in your Rails application.
 
-Requires Ruby 3.2+ and Rails 7.1+.
+No SaaS account. No third-party script. No visual page builder trying to attach
+a tooltip to a DOM node that changed last Tuesday.
+
+![A multi-step product tour showing an embedded YouTube tutorial with Back and Next controls](docs/screenshots/01-walkthrough.jpg)
 
 ## Install
 
 ```ruby
+# Gemfile
 gem "product_tours"
 ```
 
 ```bash
+bundle install
 bin/rails generate product_tours:install
 bin/rails db:migrate
 ```
 
-The migration automatically creates ready-to-use demo tutorials in development.
-Production databases are never populated with demo content.
-
-Add the widget before `</body>` in your application layout:
-
 ```erb
+<%# app/views/layouts/application.html.erb, before </body> %>
 <%= product_tours_tag %>
 ```
 
-Use any host-owned button, link, or icon as the trigger:
+Put a trigger wherever the tutorial is useful:
 
 ```erb
-<button class="btn btn-primary" data-product-tour="billing_setup">
-  Watch setup guide
-</button>
+<button data-product-tour="billing_setup">Watch the billing guide</button>
 ```
 
-Create and publish `billing_setup` in the dashboard at `/product_tours`. Keys
-are unique per locale. Draft, missing, invalid, or disabled keys open nothing
-and raise in development/test; production reports them through `Rails.error`
-and `product_tours.unresolved_trigger` instrumentation.
+That's it. Create and publish `billing_setup` at `/product_tours`, then click
+your button.
 
-### Host-controlled invocation
+The generator writes the initializer and migration, mounts the engine, and
+prints copy-ready demo buttons. In development, the migration also creates a
+small set of working tutorials so you can try the modal immediately.
 
-The host app decides where and when a guide opens. It can use a visible button,
-compose several buttons into its own Help menu, or activate a hidden trigger
-after page load. For example, Rails flash state and a host Stimulus controller
-can open a guide after a redirect:
+> [!IMPORTANT]
+> The dashboard defaults to **development only**. Set `authorize_admin` before
+> deploying it — see [Configure](#configure).
 
-```erb
-<% if flash[:product_tour].present? %>
-  <button hidden
-          data-controller="product-tour-autoplay"
-          data-product-tour="<%= flash[:product_tour] %>"></button>
-<% end %>
-```
+Ruby >= 3.2 · Rails >= 7.1 · Active Storage only for uploaded videos · Action
+Text only for rich descriptions.
 
-```js
-// product_tour_autoplay_controller.js in the host app
-connect() {
-  this.element.click()
-}
-```
+## What you get
 
-The gem deliberately has no page-rule engine, automatic display scheduler,
-resource center, or guides launcher. Those are host navigation and presentation
-choices built from the same `data-product-tour` attribute.
+| | |
+| --- | --- |
+| **Tutorials** | Title, optional rich description, optional video, one clear primary action |
+| **Walkthroughs** | Link any tutorial to another. Next opens it in place; Back uses modal history |
+| **Video** | YouTube, Vimeo, Loom, Tella, Voomly, direct MP4/WebM, or an upload |
+| **Dashboard** | Published/draft tabs, key search, live preview, explicit publish controls |
+| **Translations** | One record per language, created from the tutorial page, with locale fallback |
+| **Demo data** | Provider examples, a complete multi-step walkthrough, draft and missing-key cases |
+| **Events** | `viewed`, `dismissed`, `completed` through `ActiveSupport::Notifications` |
+| **Deps** | Rails only. Plain JS — no Tailwind, Stimulus, importmap, npm, CDN, or build step |
+| **Auth** | Lambdas over the raw request — Devise, Rails 8 auth, anything |
+| **i18n** | 26 bundled languages, including RTL |
+| **Turbo/CSP** | Turbo Drive, nonce-based CSP, and supported iframe origins out of the box |
 
-## Tutorials
+## The whole flow
 
-A tutorial is stored internally as a `ProductTours::Post`. It has a title, key,
-locale, `draft`/`published` status,
-optional video, optional rich description, and one primary action. Video URLs
-support YouTube, Vimeo, Loom, Tella, Voomly, and direct MP4/WebM files.
+1. A developer places `data-product-tour="some_key"` where help belongs.
+2. An admin creates that key, adds text/video, chooses Draft or Published, and
+   decides what the main button does.
+3. A visitor clicks the host app's button. The gem resolves the current locale,
+   opens its own modal, and emits `product_tours.viewed`.
+4. The main action closes, opens an app page, or continues to another tutorial.
+   Linked tutorials stay in the same modal and get a Back button automatically.
 
-The dashboard previews a pasted video URL immediately. YouTube, Vimeo, and Loom
-metadata is fetched through oEmbed; the other supported providers still get a
-safe resolved preview. Direct videos seek to an early frame so they do not look
-like an empty player before playback.
+| Product-tour dashboard | Tutorial editor |
+| --- | --- |
+| ![The dashboard with published tutorials on the left and a selected YouTube tutorial on the right](docs/screenshots/02-dashboard.jpg) | ![The editor previewing a YouTube URL and choosing another tutorial as the primary action](docs/screenshots/04-editor.jpg) |
+| The default language is the canonical list. Preview, publish, translate, or edit without a deploy. | Paste a supported URL and the preview appears immediately. Choose URL or upload, then one action. |
 
-The admin sidebar treats `I18n.default_locale` as the canonical tutorial list.
-The New product tour button always creates that default-language record. Open a
-tutorial to see its existing languages or add another available locale; each
-translation remains an ordinary draft/published `Post` with the same key.
+<img src="docs/screenshots/03-mobile.jpg" alt="The product tutorial modal filling a mobile viewport with a video and primary action" width="390">
 
-When the host has a Rails Content Security Policy, the engine preserves its
-existing `frame-src` entries and automatically adds the supported embed origins.
-For a direct video hosted on a custom origin, the host remains responsible for
-allowing that origin in `media-src` (or can allow HTTPS media generally).
+On screens up to 480px the modal becomes a full-screen sheet, respects safe
+areas, and follows `visualViewport` while the mobile keyboard is open.
 
-### Link tutorials into a walkthrough
+## Why a gem
 
-In the tutorial editor, choose what the primary button does: finish and close,
-open a page, or continue to another tutorial. Continuing opens the selected
-tutorial in the
-same modal and automatically gives visitors a Back button.
+| | `product_tours` | Hosted tour SaaS |
+| --- | --- | --- |
+| Cost | Free, MIT | Monthly, usually tied to MAU |
+| Where content lives | Your database | The vendor's |
+| Trigger placement | Your Rails views and product logic | A remote visual builder |
+| Videos | Your URLs or Active Storage | Their upload/storage rules |
+| User/account data | Not collected by the gem | Usually synced for targeting |
+| Analytics | Events for the tool you already use | Another dashboard |
+| Frontend | One same-origin plain-JS file | Third-party script and network calls |
+| If you remove it | Delete the helper and mount | Untangle remote campaigns and targeting |
 
-Tutorials remain independently invokable—there is no separate course, step, or
-sequence model. The Back history exists only for the open modal, so a tutorial opened
-directly never shows a misleading Back button.
+This is intentionally the reliable half of product tours: self-contained
+guidance modals, not DOM-anchored tooltip choreography.
 
-Video uploads require Active Storage:
+## Build a walkthrough
+
+Every tutorial has one primary action:
+
+| Choice | What visitors get |
+| --- | --- |
+| **Finish and close** | Emits `completed` and closes the modal |
+| **Continue to another tutorial** | Opens that key in the same modal and adds Back history |
+| **Open a page** | Emits `completed`, then follows a relative path or HTTP(S) URL |
+
+Select **Continue to another tutorial** in the editor and pick a tutorial in the
+same language. Draft targets are selectable while you assemble the walkthrough;
+publish the complete chain before exposing its first trigger.
+
+There is deliberately no Course, Tour, or Step model. Tutorials remain
+independently invokable. The modal remembers only the path the current visitor
+took, so opening a middle tutorial directly never shows a misleading Back
+button.
+
+## Video
+
+Paste any supported HTTPS URL:
+
+| Provider | Accepted examples |
+| --- | --- |
+| YouTube | `youtube.com/watch`, Shorts, Live, embed, `youtu.be` |
+| Vimeo | Public and unlisted links; privacy hashes are preserved |
+| Loom | Share and embed links |
+| Tella | Video links |
+| Voomly | Share, video, and embed links |
+| Direct | URLs ending in `.mp4` or `.webm` |
+
+YouTube, Vimeo, and Loom metadata comes from their oEmbed endpoints. Metadata is
+best-effort: a timeout never prevents you from saving a valid URL. YouTube uses
+`youtube-nocookie.com`; unsupported hosts and lookalike URLs fail closed.
+
+Direct videos seek to an early frame for a useful preview instead of showing an
+empty player.
+
+<details>
+<summary><b>Upload videos or add rich descriptions</b></summary>
+
+Both are optional Rails features:
 
 ```bash
 bin/rails active_storage:install
-bin/rails db:migrate
-```
-
-Rich descriptions require Action Text:
-
-```bash
 bin/rails action_text:install
 bin/rails db:migrate
 ```
 
-The post form hides either feature when its Rails framework is not installed.
+Once the tables exist, the editor offers **Use a video link / Upload a video**
+and a compact rich-text description editor. Uploaded videos are reached through
+the engine's gated media route.
+
+</details>
+
+## Translations
+
+The dashboard sidebar shows only `I18n.default_locale`. Open a tutorial to see
+every existing language and add another from `I18n.available_locales`.
+
+- New product tours always start in the default locale.
+- A translation copies the source into a new **draft** with the same key.
+- The key and language become locked identity; translate, review, then publish.
+- A trigger tries `I18n.locale`, then `I18n.default_locale` only when no current-
+  locale record exists.
+- A draft translation does **not** silently fall back to published English. It
+  stays unavailable until you publish it.
+
+This keeps one stable developer key while giving admins an obvious place to
+manage every language.
 
 ## Demo tutorials
 
-The installer seeds the app's default locale in development. Copy the block it
-prints into any ERB view to open every demo entry point immediately:
+Development installs seed the app's default locale automatically. Refresh the
+full idempotent set in English, French, and Bulgarian whenever you like:
+
+```bash
+bin/rails product_tours:seed_demo
+```
+
+The demo includes every video provider, a walkthrough through all of them, a
+direct MP4, a normal URL action, an unpublished key, and an intentionally missing
+key. Running the task again updates those records instead of duplicating them.
+
+<details>
+<summary><b>Copy-ready demo buttons</b></summary>
 
 ```erb
 <div class="product-tours-demo">
@@ -138,48 +210,82 @@ prints into any ERB view to open every demo entry point immediately:
 <%= product_tours_tag %>
 ```
 
-`demo_walkthrough_start` introduces the collection, then continues through the
-YouTube, Vimeo, Loom, Tella, Voomly, and direct-video tutorials before its final
-step. Every transition demonstrates the automatic Back button. The individual
-provider buttons remain available so each video can also be opened directly.
-The final two buttons deliberately exercise unresolved triggers: `demo_draft`
-exists but remains unpublished, while `demo_missing_post` is never seeded.
+</details>
 
-Refresh the full idempotent demo set in English, French, and Bulgarian at any
-time:
+## Configure
 
-```bash
-bin/rails product_tours:seed_demo
-```
+Everything is optional — a development install works with zero config. In
+`config/initializers/product_tours.rb`:
 
-Along with the provider examples, it creates `demo_walkthrough_start`,
-`demo_walkthrough_features`, `demo_walkthrough_finish`, and the unpublished
-`demo_draft` in the default demo locales (`en`, `fr`, and `bg`). The missing-key
-button intentionally has no matching record. Running the task again refreshes
-the seeded records instead of duplicating them and prints the copy-ready block
-again. To seed only one locale from application code, call
-`ProductTours::Seeds.load!(locale: :fr)`.
-
-## Configuration
-
-The installer creates `config/initializers/product_tours.rb`. Important hooks:
+| Option | Default | What it does |
+| --- | --- | --- |
+| `enabled` | everyone | Who can resolve and open published tutorials |
+| `authorize_admin` | development only | **Who can manage content at the mount path** |
+| `admin_layout` | gem layout | Render the dashboard inside your admin shell |
+| `storage_service` | app default | Named Active Storage service for uploaded videos |
+| `mount_path` | `/product_tours` | Keep in sync only when mounting the engine manually |
 
 ```ruby
 ProductTours.configure do |config|
+  config.enabled = ->(request) { request.env["warden"]&.user.present? }
   config.authorize_admin = ->(request) { request.env["warden"]&.user&.admin? }
+  config.admin_layout = "admin/application"
+  config.storage_service = :product_tours
 end
 ```
 
-Tutorial lookup automatically uses the page's current `I18n.locale`, then falls
-back to `I18n.default_locale` when that key has no current-locale record. An
-existing draft translation is not bypassed by the fallback.
+Gates receive the **raw request**, so Devise, Rails 8 authentication, Flipper,
+or your own session model all work without an adapter.
 
-## Lifecycle Notifications
+## Trigger it from your own UI
 
-The widget emits `product_tours.viewed`, `product_tours.dismissed`, and
-`product_tours.completed` through `ActiveSupport::Notifications`. The gem does
-not persist analytics and does not depend on Ahoy. `completed` means the visitor
-used the tutorial's primary action; video playback does not imply completion.
+The gem ships no floating launcher. A trigger belongs in the navigation,
+settings card, empty state, or success screen where it makes sense:
+
+```erb
+<a href="#" data-product-tour="invite_team">How team invitations work</a>
+```
+
+Keep `<%= product_tours_tag %>` in the layout when triggers appear across the
+app. When `enabled` returns false, the helper renders nothing and the endpoints
+also reject the request.
+
+<details>
+<summary><b>Open a tutorial after a redirect</b></summary>
+
+The host owns timing. Rails flash plus a tiny Stimulus controller is enough:
+
+```erb
+<% if flash[:product_tour].present? %>
+  <button hidden
+          data-controller="product-tour-autoplay"
+          data-product-tour="<%= flash[:product_tour] %>"></button>
+<% end %>
+```
+
+```js
+// product_tour_autoplay_controller.js in your app
+connect() {
+  this.element.click()
+}
+```
+
+</details>
+
+## Lifecycle events
+
+The gem persists no analytics, user identity, cookies, progress, or completion
+table. It emits three Rails notifications:
+
+| Event | Meaning |
+| --- | --- |
+| `product_tours.viewed` | The modal became visible and focused |
+| `product_tours.dismissed` | The visitor closed it before using the primary action |
+| `product_tours.completed` | The visitor used the primary action |
+
+Payload: `post_id`, `key`, `locale`, query-free `page_url`, and `source`.
+
+Bridge them to Ahoy—or anything else—in your host app:
 
 ```ruby
 ActiveSupport::Notifications.subscribe(/^product_tours\./) do |name, _start, _finish, _id, payload|
@@ -187,23 +293,67 @@ ActiveSupport::Notifications.subscribe(/^product_tours\./) do |name, _start, _fi
 end
 ```
 
-The host may store these events with Ahoy and attach its own user or account
-context in the subscriber. Persistence, dashboards, identity, and vendor-specific
-integrations remain outside this gem.
+Your subscriber can attach `Current.user` or account context. That identity does
+not need to become product-tour configuration.
 
-## Scope
+## Broken triggers fail loudly, not publicly
 
-`product_tours` owns tutorial persistence and editing, safe media rendering, the
-modal experience, linked-tutorial navigation, and lifecycle notifications. The host
-app owns trigger timing and placement, Help/resource menus, analytics storage,
-reporting, and downstream integrations.
+`data-product-tour="key"` is a contract between code and dashboard content.
+Invalid, missing, draft, or disabled keys open nothing for the visitor.
+
+- Development/test: raises `ProductTours::UnresolvedTriggerError`.
+- Production: reports through `Rails.error`, logs as a fallback, and emits
+  `product_tours.unresolved_trigger` with `invalid_key`, `missing`,
+  `unpublished`, or `disabled`.
+
+No end user gets a Rails error page because somebody renamed a tutorial.
+
+## Security
+
+- Admin authorization runs server-side on every dashboard request.
+- Public resolution returns only published tutorials allowed by `enabled`.
+- Video providers are an HTTPS allowlist; unsupported URLs render no iframe.
+- Action URLs accept relative app paths or HTTP(S), never script schemes.
+- Widget/dashboard assets are same-origin and fingerprinted.
+- Rails CSP nonces are preserved. Supported provider origins are merged into
+  `frame-src` without replacing the host policy.
+- For direct videos on another origin, allow that origin in the host app's
+  `media-src` policy.
+
+## What it doesn't do
+
+No anchored tooltips, selector recorder, page-rule engine, automatic scheduler,
+checklists, persisted progress, analytics dashboard, resource center, AI writer,
+Segment/Mixpanel/Slack integration, or user/account sync.
+
+The host app owns trigger timing and Help navigation. Ahoy or your analytics
+stack owns persistence and reporting. The gem stays small enough to understand.
 
 ## Development
 
 ```bash
-bundle install
 bundle exec rake test
 bundle exec rubocop
 ```
 
-Rails 7.1+ and Ruby 3.2+ are supported.
+CI runs Rails 7.1 / 7.2 / 8.0 / 8.1 against Ruby 3.2 / 3.3 / 3.4.
+
+Bug reports and pull requests are welcome. The most useful report is a real
+Rails app and the exact point where installation or authoring felt confusing.
+
+## Also by the same author
+
+- [testimonials](https://github.com/yshmarov/testimonials) — testimonials,
+  video reviews, and NPS for Rails.
+- [livechat](https://github.com/yshmarov/livechat) — in-app support messaging
+  for Rails.
+- [ideasbugs](https://github.com/yshmarov/ideasbugs) — in-app bug reports and
+  feature requests.
+- [i18n_proofreading](https://github.com/yshmarov/i18n_proofreading) — in-context
+  translation proofreading.
+- [SupeRails](https://superails.com) — Rails screencasts.
+
+## License
+
+MIT. If it saved you a subscription, a
+[⭐](https://github.com/yshmarov/product_tours) is a fair trade.

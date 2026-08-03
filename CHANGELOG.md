@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-04
+
+- Reworked the README into an installation-first, skimmable product guide that
+  accurately documents walkthroughs, video providers, translations, demo data,
+  configuration, lifecycle events, security, and intentional non-goals.
+- Replaced the implementation-era PRD with a concise contract for the shipped
+  product boundary and current behavior.
+- Added real desktop dashboard, editor, walkthrough, and mobile screenshots from
+  the seeded dummy application.
+
 ## [0.1.0] - 2026-08-03
 
 - Initial Rails engine, post dashboard, modal widget, video providers,
@@ -37,5 +47,6 @@
 - Removed generic tutorial duplication now that translations provide the only
   intentional content-copying workflow.
 
-[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/yshmarov/product_tours/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/yshmarov/product_tours/releases/tag/v0.1.0

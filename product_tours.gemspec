@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
     'app/**/*',
     'config/**/*',
     'lib/**/*',
+    'docs/screenshots/*',
     'MIT-LICENSE',
     'Rakefile',
     'README.md',
