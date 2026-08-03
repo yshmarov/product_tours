@@ -36,7 +36,7 @@ module ProductTours
         'provider_title' => body['title'].presence,
         'thumbnail_url' => safe_https_url(body['thumbnail_url'])
       ).compact
-    rescue JSON::ParserError, IOError, SystemCallError, Timeout::Error, OpenSSL::SSL::SSLError
+    rescue JSON::ParserError, IOError, SocketError, SystemCallError, Timeout::Error, OpenSSL::SSL::SSLError
       metadata || {}
     end
 

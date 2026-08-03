@@ -1,6 +1,8 @@
 bg:
   product_tours:
     close: "Затвори"
+    back: "Назад"
+    next: "Напред"
     done: "Готово"
     dialog: "Урок за продукта"
     video: "Видео урок"

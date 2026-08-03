@@ -1,6 +1,8 @@
 pl:
   product_tours:
     close: "Zamknij"
+    back: "Wstecz"
+    next: "Dalej"
     done: "Gotowe"
     dialog: "Samouczek produktu"
     video: "Film instruktażowy"

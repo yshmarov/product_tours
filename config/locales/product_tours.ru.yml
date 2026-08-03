@@ -1,6 +1,8 @@
 ru:
   product_tours:
     close: "Закрыть"
+    back: "Назад"
+    next: "Далее"
     done: "Готово"
     dialog: "Руководство по продукту"
     video: "Обучающее видео"

@@ -1,8 +1,22 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'open3'
 
 class ProductToursTest < ActiveSupport::TestCase
+  test 'top-level require loads Rails before the engine' do
+    command = <<~RUBY
+      abort 'Rails was already loaded' if defined?(Rails)
+      require 'product_tours'
+      print ProductTours::VERSION
+    RUBY
+    lib_path = ProductTours::Engine.root.join('lib').to_s
+    output, error, status = Open3.capture3(RbConfig.ruby, "-I#{lib_path}", '-e', command)
+
+    assert status.success?, error
+    assert_equal ProductTours::VERSION, output
+  end
+
   test 'has safe configuration defaults' do
     request = ActionDispatch::TestRequest.create
 
@@ -10,15 +24,18 @@ class ProductToursTest < ActiveSupport::TestCase
     refute ProductTours.admin?(request)
     assert_equal '/product_tours', ProductTours.config.mount_path
     assert_equal '/product_tours/widget', ProductTours.config.widget_endpoint
-    assert ProductTours.config.raise_on_unresolved_trigger.call(request)
+    assert_equal I18n.locale.to_s, ProductTours.locale(request)
   end
 
-  test 'exposes loose user and tenant context' do
+  test 'uses the current locale without identity, tenant, or rate configuration' do
     request = ActionDispatch::TestRequest.create
-    ProductTours.config.current_user = ->(_request) { fake_user }
-    ProductTours.config.tenant = ->(_request) { 91 }
 
-    assert_equal({ user_id: '42', user_label: 'Ada Lovelace' }, ProductTours.user_payload(request))
-    assert_equal '91', ProductTours.tenant(request)
+    I18n.with_locale(:fr) { assert_equal 'fr', ProductTours.locale(request) }
+    refute_respond_to ProductTours.config, :current_user
+    refute_respond_to ProductTours.config, :user_label
+    refute_respond_to ProductTours.config, :tenant
+    refute_respond_to ProductTours.config, :locale
+    refute_respond_to ProductTours.config, :rate_limit
+    refute_respond_to ProductTours.config, :raise_on_unresolved_trigger
   end
 end

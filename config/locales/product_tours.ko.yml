@@ -1,6 +1,8 @@
 ko:
   product_tours:
     close: "닫기"
+    back: "뒤로"
+    next: "다음"
     done: "완료"
     dialog: "제품 튜토리얼"
     video: "튜토리얼 동영상"

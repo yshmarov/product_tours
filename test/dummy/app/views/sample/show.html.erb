@@ -13,10 +13,9 @@
 <body>
   <h1>Product tours demo</h1>
   <div class="demo-buttons">
-    <% ProductTours::Post.published.order(:key).each do |post| %>
-      <button class="demo-button" data-product-tour="<%= post.key %>"><%= post.title %></button>
+    <% ProductTours::Seeds::BUTTONS.each do |key, label| %>
+      <button class="demo-button" type="button" data-product-tour="<%= key %>"><%= label %></button>
     <% end %>
-    <button class="demo-button" data-product-tour="missing_demo">Missing post</button>
   </div>
   <%= product_tours_tag %>
 </body>

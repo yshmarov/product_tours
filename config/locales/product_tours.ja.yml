@@ -1,6 +1,8 @@
 ja:
   product_tours:
     close: "閉じる"
+    back: "戻る"
+    next: "次へ"
     done: "完了"
     dialog: "製品チュートリアル"
     video: "チュートリアル動画"

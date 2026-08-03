@@ -1,6 +1,8 @@
 nl:
   product_tours:
     close: "Sluiten"
+    back: "Terug"
+    next: "Volgende"
     done: "Klaar"
     dialog: "Producttutorial"
     video: "Tutorialvideo"

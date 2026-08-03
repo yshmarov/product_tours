@@ -1,5 +1,5 @@
 <% content_for :body_class, "pt-form-page" %>
 
-<div class="breadcrumb"><%= link_to t("product_tours.dashboard.title", default: "Product tours"), posts_path %> / <%= t("product_tours.dashboard.new_post", default: "New post") %></div>
-<h1><%= t("product_tours.dashboard.new_post", default: "New post") %></h1>
+<div class="breadcrumb"><%= link_to t("product_tours.dashboard.title", default: "Product tours"), posts_path %> / <%= t("product_tours.dashboard.new_post", default: "New product tour") %></div>
+<h1><%= t("product_tours.dashboard.new_post", default: "New product tour") %></h1>
 <%= render "form", post: @post %>

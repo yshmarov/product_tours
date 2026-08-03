@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
+require 'rails'
+
 module ProductTours
   class Engine < ::Rails::Engine
     isolate_namespace ProductTours
-
-    rake_tasks do
-      load File.expand_path('../tasks/product_tours_tasks.rake', __dir__)
-    end
 
     initializer 'product_tours.helpers' do
       ActiveSupport.on_load(:action_view) do
@@ -21,6 +19,10 @@ module ProductTours
           mount ProductTours::Engine, at:, **options
         end
       end)
+    end
+
+    initializer 'product_tours.content_security_policy', after: :load_config_initializers do |app|
+      ProductTours::ContentSecurityPolicy.apply!(app.config.content_security_policy)
     end
   end
 end

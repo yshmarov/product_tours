@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'securerandom'
 require 'uri'
 
 module ProductTours
@@ -19,36 +18,17 @@ module ProductTours
       render plain: 'Forbidden. Set ProductTours.config.authorize_admin to grant access.', status: :forbidden
     end
 
-    def current_product_tours_user
-      return @current_product_tours_user if defined?(@current_product_tours_user)
-
-      @current_product_tours_user = ProductTours.config.current_user.call(request)
-    end
-
-    def user_context
-      user = current_product_tours_user
-      {
-        user_id: user.respond_to?(:id) ? user.id.to_s : nil,
-        user_label: user ? ProductTours.config.user_label.call(user).presence&.to_s : nil
-      }
-    end
-
     def current_product_tours_locale
+      requested_locale = params[:locale].to_s
+      return requested_locale if I18n.available_locales.map(&:to_s).include?(requested_locale)
+
       ProductTours.locale(request)
     end
 
-    def current_product_tours_tenant
-      ProductTours.tenant(request)
-    end
-
-    def ensure_visitor_token
-      return if current_product_tours_user
-
-      cookies[:product_tours_vid].presence || begin
-        token = SecureRandom.base58(24)
-        cookies.permanent[:product_tours_vid] = { value: token, httponly: true, same_site: :lax }
-        token
-      end
+    def find_post_by_locale(scope, key)
+      locales = [current_product_tours_locale, I18n.default_locale.to_s].uniq
+      posts = scope.where(locale: locales, key: key).index_by(&:locale)
+      locales.filter_map { |locale| posts[locale] }.first
     end
 
     def clean_page_url(value)
@@ -63,20 +43,18 @@ module ProductTours
     end
 
     def unresolved_payload(key, reason)
-      user_context.merge(
+      {
         key: key.to_s,
         locale: current_product_tours_locale,
         reason: reason.to_s,
-        page_url: clean_page_url(params[:page_url]),
-        tenant: current_product_tours_tenant,
-        visitor_token: ensure_visitor_token
-      )
+        page_url: clean_page_url(params[:page_url])
+      }
     end
 
     def handle_unresolved_trigger(key, reason)
       payload = unresolved_payload(key, reason)
       error = ProductTours::UnresolvedTriggerError.new(payload)
-      raise error if ProductTours.config.raise_on_unresolved_trigger.call(request)
+      raise error if Rails.env.development? || Rails.env.test?
 
       if defined?(Rails.error) && Rails.error.respond_to?(:report)
         Rails.error.report(error, handled: true, context: payload)
@@ -85,10 +63,6 @@ module ProductTours
       end
       ActiveSupport::Notifications.instrument('product_tours.unresolved_trigger', payload)
       render json: { error: 'unresolved_trigger', reason: reason.to_s }, status: :not_found
-    end
-
-    def render_rate_limited
-      render json: { error: 'rate_limited' }, status: :too_many_requests
     end
   end
 end

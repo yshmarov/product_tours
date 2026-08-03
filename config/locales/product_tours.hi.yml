@@ -1,6 +1,8 @@
 hi:
   product_tours:
     close: "बंद करें"
+    back: "वापस"
+    next: "अगला"
     done: "पूरा हुआ"
     dialog: "उत्पाद ट्यूटोरियल"
     video: "ट्यूटोरियल वीडियो"

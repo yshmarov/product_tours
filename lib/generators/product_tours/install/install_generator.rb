@@ -24,10 +24,12 @@ module ProductTours
       end
 
       def post_install
-        say "\nproduct_tours installed. Run `bin/rails db:migrate`, then add", :green
-        say '`<%= product_tours_tag %>` before </body> in your application layout.'
-        say 'Manage posts at /product_tours (development only until config.authorize_admin is set).'
-        say 'Optional: run `bin/rails product_tours:seed_demo` for provider demo posts.'
+        say "\nproduct_tours installed. Run `bin/rails db:migrate`.", :green
+        say 'The migration adds ready-to-use demo posts in development.'
+        say "\nCopy this into any ERB view to try them:\n\n"
+        say ProductTours::Seeds.trigger_html
+        say 'Manage tutorials at /product_tours (development only until config.authorize_admin is set).'
+        say 'Run `bin/rails product_tours:seed_demo` any time to refresh every demo locale.'
         say 'Run `bin/rails active_storage:install` for uploads and '
         say '`bin/rails action_text:install` for rich descriptions.\n'
       end

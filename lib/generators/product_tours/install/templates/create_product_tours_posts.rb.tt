@@ -11,6 +11,7 @@ class CreateProductToursPosts < ActiveRecord::Migration<%= migration_version %>
       t.json :video_metadata, null: false, default: {}
       t.string :action_label
       t.text :action_url
+      t.string :action_post_key
 
       t.timestamps
     end
@@ -18,5 +19,11 @@ class CreateProductToursPosts < ActiveRecord::Migration<%= migration_version %>
     add_index :product_tours_posts, %i[locale key], unique: true
     add_index :product_tours_posts, :locale
     add_index :product_tours_posts, :status
+
+    reversible do |direction|
+      direction.up do
+        ProductTours::Seeds.load_for_install!
+      end
+    end
   end
 end

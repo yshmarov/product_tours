@@ -1,6 +1,8 @@
 fr:
   product_tours:
     close: "Fermer"
+    back: "Retour"
+    next: "Suivant"
     done: "Terminé"
     dialog: "Tutoriel produit"
     video: "Vidéo du tutoriel"

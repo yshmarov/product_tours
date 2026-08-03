@@ -1,6 +1,8 @@
 el:
   product_tours:
     close: "Κλείσιμο"
+    back: "Πίσω"
+    next: "Επόμενο"
     done: "Τέλος"
     dialog: "Οδηγός προϊόντος"
     video: "Βίντεο οδηγός"

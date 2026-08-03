@@ -17,6 +17,7 @@ ActiveRecord::Schema.define do
     t.json :video_metadata, null: false, default: {}
     t.string :action_label
     t.text :action_url
+    t.string :action_post_key
     t.timestamps
   end
   add_index :product_tours_posts, %i[locale key], unique: true
@@ -81,14 +82,6 @@ module ActiveSupport
 
     def as_admin!
       ProductTours.config.authorize_admin = ->(_request) { true }
-    end
-
-    def report_unresolved!
-      ProductTours.config.raise_on_unresolved_trigger = ->(_request) { false }
-    end
-
-    def fake_user(id: 42, name: 'Ada Lovelace', email: 'ada@example.com')
-      Struct.new(:id, :name, :email).new(id, name, email)
     end
 
     def create_post(**attributes)

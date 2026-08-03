@@ -32,6 +32,34 @@ class PostTest < ActiveSupport::TestCase
     end
   end
 
+  test 'links to another post in the same locale' do
+    destination = create_post(key: 'invite_team', title: 'Invite your team')
+    source = create_post(key: 'welcome', action_post_key: destination.key)
+
+    assert_equal destination, source.action_post
+  end
+
+  test 'rejects ambiguous, missing, cross-locale, and self-linked actions' do
+    create_post(key: 'french_next', locale: 'fr')
+
+    ambiguous = ProductTours::Post.new(key: 'ambiguous', locale: 'en', title: 'Ambiguous',
+                                       action_url: '/settings', action_post_key: 'next_post')
+    missing = ProductTours::Post.new(key: 'missing_link', locale: 'en', title: 'Missing',
+                                     action_post_key: 'next_post')
+    cross_locale = ProductTours::Post.new(key: 'cross_locale', locale: 'en', title: 'Cross locale',
+                                          action_post_key: 'french_next')
+    self_link = ProductTours::Post.new(key: 'self_link', locale: 'en', title: 'Self link',
+                                       action_post_key: 'self_link')
+
+    refute ambiguous.valid?
+    assert_includes ambiguous.errors[:base], 'Primary action can open a URL or another post, not both'
+    refute missing.valid?
+    assert_includes missing.errors[:action_post_key], 'must identify an existing post in the same locale'
+    refute cross_locale.valid?
+    refute self_link.valid?
+    assert_includes self_link.errors[:action_post_key], 'cannot link to the same post'
+  end
+
   test 'derives provider metadata and rejects unsupported video URLs' do
     post = create_post(video_url: 'https://youtu.be/M7lc1UVf-VE')
 

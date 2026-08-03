@@ -39,6 +39,7 @@ module ProductTours
       def labels
         {
           close: t(:close, 'Close'),
+          back: t(:back, 'Back'),
           done: t(:done, 'Done'),
           dialog: t(:dialog, 'Product tutorial'),
           video: t(:video, 'Tutorial video'),

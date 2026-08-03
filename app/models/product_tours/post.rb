@@ -6,6 +6,7 @@ module ProductTours
   class Post < ApplicationRecord
     KEY_FORMAT = /\A[a-z0-9]+(?:[._-][a-z0-9]+)*\z/
     STATUSES = %w[draft published].freeze
+    DASHBOARD_STATUSES = %w[published draft].freeze
 
     enum :status, STATUSES.index_by(&:itself), default: :draft
 
@@ -17,6 +18,8 @@ module ProductTours
     validates :locale, presence: true
     validates :status, inclusion: { in: STATUSES }
     validates :title, presence: true
+    validate :action_has_one_destination
+    validate :action_post_is_linkable
     validate :action_url_is_safe
     validate :video_url_is_supported
     validate :uploaded_file_is_video
@@ -50,7 +53,18 @@ module ProductTours
       resolved = VideoResolver.resolve(video_url)
       return if resolved.nil?
 
-      { kind: resolved.kind, provider: resolved.provider, url: resolved.url }
+      {
+        kind: resolved.kind,
+        provider: resolved.provider,
+        url: resolved.url,
+        thumbnail_url: video_metadata.to_h['thumbnail_url']
+      }.compact
+    end
+
+    def action_post
+      return if action_post_key.blank?
+
+      self.class.find_by(locale: locale, key: action_post_key)
     end
 
     private
@@ -80,6 +94,28 @@ module ProductTours
       errors.add(:action_url, 'must be a relative path or an HTTP(S) URL')
     rescue URI::InvalidURIError
       errors.add(:action_url, 'must be a relative path or an HTTP(S) URL')
+    end
+
+    def action_has_one_destination
+      return unless action_url.present? && action_post_key.present?
+
+      errors.add(:base, 'Primary action can open a URL or another post, not both')
+    end
+
+    def action_post_is_linkable
+      return if action_post_key.blank?
+
+      unless action_post_key.match?(KEY_FORMAT)
+        errors.add(:action_post_key, 'must use a valid post key')
+        return
+      end
+      if action_post_key == key
+        errors.add(:action_post_key, 'cannot link to the same post')
+        return
+      end
+      return if locale.blank? || self.class.exists?(locale: locale, key: action_post_key)
+
+      errors.add(:action_post_key, 'must identify an existing post in the same locale')
     end
 
     def uploaded_file_is_video

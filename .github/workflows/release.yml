@@ -1,0 +1,49 @@
+# Publishes the gem when a matching v* tag is pushed, using RubyGems trusted
+# publishing (OIDC) instead of a long-lived API key.
+#
+# One-time setup for the first release:
+#   RubyGems.org profile → Trusted publishers → Create pending publisher
+#   gem: product_tours
+#   repository owner: yshmarov
+#   repository: product_tours
+#   workflow: release.yml
+#   environment: release
+#
+# Release flow after that:
+#   git tag v0.1.0 && git push origin v0.1.0
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - name: Verify tag matches gem version
+        run: |
+          version="$(ruby -Ilib -r product_tours/version -e 'print ProductTours::VERSION')"
+          test "$GITHUB_REF_NAME" = "v$version"
+      - name: Validate release
+        run: |
+          bundle exec rake test
+          bundle exec rubocop
+          node --check lib/product_tours/dashboard.js
+          node --check lib/product_tours/widget.js
+      - uses: rubygems/configure-rubygems-credentials@v2.1.0
+      - name: Build and publish
+        run: |
+          gem build product_tours.gemspec
+          gem push product_tours-*.gem

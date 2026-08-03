@@ -1,6 +1,8 @@
 tr:
   product_tours:
     close: "Kapat"
+    back: "Geri"
+    next: "İleri"
     done: "Bitti"
     dialog: "Ürün eğitimi"
     video: "Eğitim videosu"

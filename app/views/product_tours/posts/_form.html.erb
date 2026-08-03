@@ -1,4 +1,10 @@
 <%= form_with model: post, class: "post-form" do |form| %>
+  <% action_target = post.action_post_key.present? ? "post" : (post.action_url.present? ? "url" : "close") %>
+  <% linkable_posts = @linkable_posts.map do |candidate|
+       { id: candidate.id, key: candidate.key, locale: candidate.locale, status: candidate.status,
+         label: "#{candidate.title} — #{candidate.key} (#{candidate.status})" }
+     end %>
+  <% video_source = params[:video_source].presence || (post.uploaded_video? ? "upload" : "url") %>
   <% if post.errors.any? %>
     <div class="errors" role="alert">
       <strong><%= t("product_tours.dashboard.fix_errors", default: "Fix the following fields:") %></strong>
@@ -6,28 +12,40 @@
     </div>
   <% end %>
 
-  <div class="card pad form-card">
+  <div class="form-card">
   <section class="form-section">
-    <h2><%= t("product_tours.dashboard.identity", default: "Identity") %></h2>
-    <div class="field-grid">
-      <div class="field wide">
-        <%= form.label :title %>
-        <%= form.text_field :title, required: true, autofocus: true %>
-      </div>
-      <div class="field">
-        <%= form.label :key %>
-        <%= form.text_field :key, required: true, pattern: "[a-z0-9]+([._-][a-z0-9]+)*",
-                            data: { product_tour_key: true }, placeholder: "billing_setup" %>
-        <small><%= t("product_tours.dashboard.key_hint", default: "Lowercase letters and numbers, separated by ., _, or -.") %></small>
-      </div>
-      <div class="field">
-        <%= form.label :locale %>
-        <%= form.text_field :locale, required: true, placeholder: I18n.default_locale %>
-      </div>
-      <div class="field">
-        <%= form.label :status %>
-        <%= form.select :status, ProductTours::Post::STATUSES.map { |status| [status.humanize, status] } %>
-      </div>
+    <h2><%= t("product_tours.dashboard.identity", default: "Tutorial details") %></h2>
+    <div class="field">
+      <%= form.label :title %>
+      <%= form.text_field :title, required: true, autofocus: true %>
+    </div>
+    <div class="field">
+      <%= form.label :key, t("product_tours.dashboard.trigger_key", default: "Trigger key") %>
+      <%= form.text_field :key, required: true, disabled: @identity_locked,
+                          pattern: "[a-z0-9]+([._-][a-z0-9]+)*",
+                          data: { product_tour_key: true }, placeholder: "billing_setup" %>
+      <small>
+        <% if @identity_locked %>
+          <%= t("product_tours.dashboard.key_locked_hint", default: "Shared by this tutorial and its translations.") %>
+        <% else %>
+          <%= t("product_tours.dashboard.key_hint", default: "Used by your app to open this tutorial. Lowercase letters and numbers, separated by ., _, or -.") %>
+        <% end %>
+      </small>
+    </div>
+    <div class="field">
+      <%= form.label :locale, t("product_tours.dashboard.language", default: "Language") %>
+      <%= form.text_field :locale, disabled: true %>
+      <small>
+        <% if post.new_record? %>
+          <%= t("product_tours.dashboard.default_language_hint", default: "New tutorials start in your app's default language. Add translations from the tutorial page.") %>
+        <% else %>
+          <%= t("product_tours.dashboard.language_locked_hint", default: "Add and open other languages from the tutorial page.") %>
+        <% end %>
+      </small>
+    </div>
+    <div class="field">
+      <%= form.label :status, t("product_tours.dashboard.publication_status", default: "Publication status") %>
+      <%= form.select :status, ProductTours::Post::STATUSES.map { |status| [status.humanize, status] } %>
     </div>
   </section>
 
@@ -52,39 +70,107 @@
 
   <section class="form-section">
     <h2><%= t("product_tours.dashboard.video", default: "Video") %></h2>
-    <div class="field">
-      <%= form.label :video_url, t("product_tours.dashboard.video_url", default: "Video URL") %>
-      <%= form.url_field :video_url, placeholder: "https://www.loom.com/share/..." %>
-      <small><%= t("product_tours.dashboard.video_hint", default: "YouTube, Vimeo, Loom, Tella, Voomly, or a direct MP4/WebM URL.") %></small>
-    </div>
     <% if ProductTours::Post.video_upload_supported? %>
+      <fieldset class="video-source-picker" data-video-source-picker data-has-upload="<%= post.uploaded_video? %>">
+        <legend class="sr-only"><%= t("product_tours.dashboard.video_source", default: "Video source") %></legend>
+        <label class="action-choice">
+          <%= radio_button_tag :video_source, "url", video_source == "url", data: { video_source: true } %>
+          <span><strong><%= t("product_tours.dashboard.video_link", default: "Use a video link") %></strong>
+            <small><%= t("product_tours.dashboard.video_link_hint", default: "Paste a link from a supported provider or a direct video URL.") %></small></span>
+        </label>
+        <label class="action-choice">
+          <%= radio_button_tag :video_source, "upload", video_source == "upload", data: { video_source: true } %>
+          <span><strong><%= t("product_tours.dashboard.video_upload", default: "Upload a video") %></strong>
+            <small><%= t("product_tours.dashboard.video_upload_hint", default: "Choose a video file from your computer.") %></small></span>
+        </label>
+      </fieldset>
+    <% end %>
+
+    <div data-video-source-fields="url" <%= "hidden" unless video_source == "url" %>>
       <div class="field">
-        <%= form.label :video, t("product_tours.dashboard.video_upload", default: "Upload video") %>
-        <%= form.file_field :video, accept: "video/*" %>
-        <% if post.uploaded_video? %>
-          <label class="checkbox"><%= check_box_tag "post[remove_video]", "1", false %> <%= t("product_tours.dashboard.remove_video", default: "Remove uploaded video") %></label>
-        <% end %>
+        <%= form.label :video_url, t("product_tours.dashboard.video_url", default: "Video URL") %>
+        <%= form.url_field :video_url, placeholder: "https://www.loom.com/share/...",
+                           disabled: video_source != "url", data: { video_preview_input: true } %>
+        <small><%= t("product_tours.dashboard.video_hint", default: "YouTube, Vimeo, Loom, Tella, Voomly, or a direct MP4/WebM URL.") %></small>
+      </div>
+      <div class="form-video-preview" data-video-preview
+           data-endpoint="<%= video_preview_posts_path %>"
+           data-loading="<%= t("product_tours.dashboard.video_loading", default: "Loading preview…") %>"
+           data-error="<%= t("product_tours.dashboard.video_preview_failed", default: "This video could not be previewed.") %>"
+           hidden>
+        <div class="video-preview" data-video-preview-frame></div>
+        <small data-video-preview-status role="status"></small>
+      </div>
+    </div>
+
+    <% if ProductTours::Post.video_upload_supported? %>
+      <div data-video-source-fields="upload" <%= "hidden" unless video_source == "upload" %>>
+        <div class="field">
+          <%= form.label :video, t("product_tours.dashboard.video_file", default: "Video file") %>
+          <%= form.file_field :video, accept: "video/*", disabled: video_source != "upload",
+                              required: video_source == "upload" && !post.uploaded_video? %>
+          <% if post.uploaded_video? %>
+            <small><%= t("product_tours.dashboard.current_video", default: "Current file: %{filename}", filename: post.video.filename) %></small>
+          <% end %>
+        </div>
       </div>
     <% end %>
   </section>
 
   <section class="form-section">
     <h2><%= t("product_tours.dashboard.action", default: "Primary action") %></h2>
-    <div class="field-grid">
+    <p class="section-intro"><%= t("product_tours.dashboard.action_intro", default: "Choose what happens when the visitor clicks the main button.") %></p>
+    <fieldset class="action-picker" data-action-picker>
+      <legend class="sr-only"><%= t("product_tours.dashboard.action_destination", default: "Button destination") %></legend>
+      <label class="action-choice">
+        <%= radio_button_tag :action_target, "close", action_target == "close", data: { action_target: true } %>
+        <span><strong><%= t("product_tours.dashboard.action_finish", default: "Finish and close") %></strong>
+          <small><%= t("product_tours.dashboard.action_finish_hint", default: "Marks this tutorial complete and closes the modal.") %></small></span>
+      </label>
+      <label class="action-choice">
+        <%= radio_button_tag :action_target, "post", action_target == "post", data: { action_target: true } %>
+        <span><strong><%= t("product_tours.dashboard.action_post", default: "Continue to another tutorial") %></strong>
+          <small><%= t("product_tours.dashboard.action_post_hint", default: "Opens it in the same modal and automatically adds a Back button.") %></small></span>
+      </label>
+      <label class="action-choice">
+        <%= radio_button_tag :action_target, "url", action_target == "url", data: { action_target: true } %>
+        <span><strong><%= t("product_tours.dashboard.action_url_choice", default: "Open a page") %></strong>
+          <small><%= t("product_tours.dashboard.action_url_hint", default: "Marks this tutorial complete, then sends the visitor to a URL.") %></small></span>
+      </label>
+    </fieldset>
+
+    <div class="field">
+      <%= form.label :action_label, t("product_tours.dashboard.action_label", default: "Button label") %>
+      <%= form.text_field :action_label, placeholder: action_target == "post" ? t("product_tours.next", default: "Next") : t("product_tours.done", default: "Done"),
+                          data: { action_label: true } %>
+      <small><%= t("product_tours.dashboard.action_label_hint", default: "Optional. A sensible label is used when left blank.") %></small>
+    </div>
+
+    <div data-action-fields="post">
       <div class="field">
-        <%= form.label :action_label %>
-        <%= form.text_field :action_label, placeholder: t("product_tours.done", default: "Done") %>
-      </div>
-      <div class="field wide">
-        <%= form.label :action_url %>
-        <%= form.text_field :action_url, placeholder: "/settings" %>
-        <small><%= t("product_tours.dashboard.action_hint", default: "Leave blank for a Done button that closes the modal.") %></small>
+        <%= form.label :action_post_key, t("product_tours.dashboard.next_post", default: "Next tutorial") %>
+        <% same_locale_posts = @linkable_posts.select { |candidate| candidate.locale == post.locale } %>
+        <% post_options = same_locale_posts.map { |candidate| ["#{candidate.title} — #{candidate.key} (#{candidate.status})", candidate.key] } %>
+        <%= form.select :action_post_key, options_for_select(post_options, post.action_post_key),
+                        { include_blank: t("product_tours.dashboard.select_next_post", default: "Select the next tutorial…") },
+                        required: true, data: { action_post_select: true, selected_key: post.action_post_key,
+                                                current_post_id: post.id } %>
+        <small><%= t("product_tours.dashboard.next_post_hint", default: "Tutorials must use the same language. Draft tutorials can be linked while you prepare the sequence.") %></small>
       </div>
     </div>
+
+    <div data-action-fields="url">
+      <div class="field">
+        <%= form.label :action_url %>
+        <%= form.text_field :action_url, placeholder: "/settings", required: true %>
+        <small><%= t("product_tours.dashboard.action_hint", default: "Use an app path such as /settings or a complete HTTP(S) URL.") %></small>
+      </div>
+    </div>
+    <script type="application/json" data-action-post-options><%= raw json_escape(linkable_posts.to_json) %></script>
   </section>
 
   <div class="form-actions">
-    <%= form.submit class: "button primary" %>
+    <%= form.submit(post.persisted? ? t("product_tours.dashboard.save", default: "Save changes") : t("product_tours.dashboard.create", default: "Create tutorial"), class: "button primary") %>
     <%= link_to t("product_tours.dashboard.cancel", default: "Cancel"), post.persisted? ? post_path(post) : posts_path, class: "button" %>
   </div>
   </div>

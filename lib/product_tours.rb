@@ -5,6 +5,7 @@ require 'product_tours/configuration'
 require 'product_tours/errors'
 require 'product_tours/video_resolver'
 require 'product_tours/video_metadata'
+require 'product_tours/content_security_policy'
 require 'product_tours/widget'
 require 'product_tours/seeds'
 require 'product_tours/engine'
@@ -27,22 +28,8 @@ module ProductTours
       !!config.authorize_admin.call(request)
     end
 
-    def tenant(request)
-      config.tenant.call(request).presence&.to_s
-    end
-
-    def locale(request)
-      config.locale.call(request).presence&.to_s || I18n.default_locale.to_s
-    end
-
-    def user_payload(request)
-      user = config.current_user.call(request)
-      return { user_id: nil, user_label: nil } if user.nil?
-
-      {
-        user_id: user.respond_to?(:id) ? user.id.to_s : nil,
-        user_label: config.user_label.call(user).presence&.to_s
-      }
+    def locale(_request = nil)
+      I18n.locale.to_s.presence || I18n.default_locale.to_s
     end
   end
 end

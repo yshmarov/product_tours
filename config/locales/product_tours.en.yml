@@ -1,6 +1,8 @@
 en:
   product_tours:
     close: "Close"
+    back: "Back"
+    next: "Next"
     done: "Done"
     dialog: "Product tutorial"
     video: "Tutorial video"

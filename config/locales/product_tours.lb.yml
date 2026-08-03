@@ -1,6 +1,8 @@
 lb:
   product_tours:
     close: "Zoumaachen"
+    back: "Zeréck"
+    next: "Weider"
     done: "Fäerdeg"
     dialog: "Produktutorial"
     video: "Tutorialvideo"

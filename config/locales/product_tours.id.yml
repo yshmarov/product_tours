@@ -1,6 +1,8 @@
 id:
   product_tours:
     close: "Tutup"
+    back: "Kembali"
+    next: "Berikutnya"
     done: "Selesai"
     dialog: "Tutorial produk"
     video: "Video tutorial"

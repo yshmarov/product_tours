@@ -1,50 +1,111 @@
 <section class="post-panel">
-  <div class="panel-head">
-    <h1><%= post.title %></h1>
-    <div class="post-meta">
-      <code class="key"><%= post.key %></code>
-      <span class="badge locale"><%= post.locale %></span>
-      <span class="badge status-<%= post.status %>"><%= post.status.humanize %></span>
-    </div>
-  </div>
-
   <div class="detail-scroll">
     <article class="card pad preview-card">
-      <h2><%= t("product_tours.dashboard.preview", default: "Preview") %></h2>
+      <h2><%= post.title %></h2>
       <% video = post.resolved_video %>
       <% if video %>
         <div class="video-preview">
           <% if video[:kind] == "iframe" %>
             <iframe src="<%= video[:url] %>" title="<%= post.title %>" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
           <% else %>
-            <video src="<%= post.uploaded_video? ? media_path(post) : video[:url] %>" controls preload="metadata"></video>
+            <video src="<%= post.uploaded_video? ? media_path(post) : video[:url] %>" controls playsinline preload="metadata"
+                   <% if video[:thumbnail_url].present? %>poster="<%= video[:thumbnail_url] %>"<% end %>
+                   data-video-first-frame></video>
           <% end %>
         </div>
       <% end %>
       <% if ProductTours::Post.description_supported? && post.description.present? %>
         <div class="description-preview"><%= post.description %></div>
       <% end %>
-      <div class="preview-action"><span class="button primary"><%= post.action_label.presence || t("product_tours.done", default: "Done") %></span></div>
+      <div class="preview-action">
+        <% default_label = post.action_post_key.present? ? t("product_tours.next", default: "Next") : t("product_tours.done", default: "Done") %>
+        <% if post.action_post_key.present? %><span class="preview-back"><%= t("product_tours.back", default: "Back") %></span><% end %>
+        <span class="button primary"><%= post.action_label.presence || default_label %></span>
+      </div>
     </article>
 
     <article class="card pad details-card">
-      <h2><%= t("product_tours.dashboard.details", default: "Details") %></h2>
       <dl>
+        <% target_post = post.action_post %>
+        <dt><%= t("product_tours.dashboard.key", default: "Key") %></dt>
+        <dd><code class="key"><%= post.key %></code></dd>
+        <dt><%= t("product_tours.dashboard.language", default: "Language") %></dt>
+        <dd><span class="badge locale"><%= post.locale %></span></dd>
+        <dt><%= t("product_tours.dashboard.publication_status", default: "Publication status") %></dt>
+        <dd><span class="badge status-<%= post.status %>"><%= post.status.humanize %></span></dd>
         <dt><%= t("product_tours.dashboard.video_url", default: "Video URL") %></dt><dd><%= post.video_url.presence || "—" %></dd>
-        <dt><%= t("product_tours.dashboard.action_label", default: "Action label") %></dt><dd><%= post.action_label.presence || t("product_tours.done", default: "Done") %></dd>
+        <dt><%= t("product_tours.dashboard.action_label", default: "Action label") %></dt><dd><%= post.action_label.presence || default_label %></dd>
         <dt><%= t("product_tours.dashboard.action_url", default: "Action URL") %></dt><dd><%= post.action_url.presence || "—" %></dd>
+        <dt><%= t("product_tours.dashboard.next_post", default: "Next tutorial") %></dt>
+        <dd>
+          <% if target_post %>
+            <%= link_to target_post.title, post_path(target_post) %> <code class="key"><%= post.action_post_key %></code>
+          <% else %>
+            —
+          <% end %>
+        </dd>
       </dl>
       <% if post.video_url.present? %>
         <%= button_to t("product_tours.dashboard.refresh_metadata", default: "Refresh video data"),
                       refresh_video_metadata_post_path(post), class: "button small refresh-button" %>
       <% end %>
       <% if post.video_metadata.present? %><pre class="metadata"><%= JSON.pretty_generate(post.video_metadata) %></pre><% end %>
+
+      <div class="actions details-actions">
+        <% if post.draft? %>
+          <%= button_to t("product_tours.dashboard.publish", default: "Publish"), publish_post_path(post), method: :patch,
+                        class: "button primary" %>
+          <%= link_to t("product_tours.dashboard.edit", default: "Edit"), edit_post_path(post), class: "button" %>
+        <% else %>
+          <%= link_to t("product_tours.dashboard.edit", default: "Edit"), edit_post_path(post), class: "button primary" %>
+          <%= button_to t("product_tours.dashboard.unpublish", default: "Move to drafts"), unpublish_post_path(post),
+                        method: :patch, class: "button" %>
+        <% end %>
+        <%= button_to t("product_tours.dashboard.delete", default: "Delete"), post_path(post), method: :delete,
+                      class: "danger", form: { data: { confirm: t("product_tours.dashboard.delete_confirm", default: "Delete this tutorial?") } } %>
+      </div>
     </article>
 
-    <div class="actions">
-      <%= link_to t("product_tours.dashboard.edit", default: "Edit"), edit_post_path(post), class: "button primary" %>
-      <%= button_to t("product_tours.dashboard.delete", default: "Delete"), post_path(post), method: :delete,
-                    class: "danger", form: { data: { confirm: t("product_tours.dashboard.delete_confirm", default: "Delete this post?") } } %>
-    </div>
+    <article class="card pad translations-card">
+      <h2><%= t("product_tours.dashboard.languages", default: "Languages") %></h2>
+      <div class="translation-list">
+        <% @translations.each do |translation| %>
+          <div class="translation-row">
+            <span class="translation-name">
+              <span class="badge locale"><%= product_tours_locale_name(translation.locale) %></span>
+              <% if translation.locale == I18n.default_locale.to_s %>
+                <span class="muted"><%= t("product_tours.dashboard.default_language", default: "Default") %></span>
+              <% end %>
+              <span class="badge status-<%= translation.status %>"><%= translation.status.humanize %></span>
+            </span>
+            <% if translation.id == post.id %>
+              <span class="muted"><%= t("product_tours.dashboard.current_language", default: "Current") %></span>
+            <% else %>
+              <% translation_path = if sidebar_context
+                                      posts_path(status: @status, q: @query, page: @page,
+                                                 post_id: translation.id)
+                                    else
+                                      post_path(translation)
+                                    end %>
+              <%= link_to t("product_tours.dashboard.open", default: "Open"), translation_path %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @missing_translation_locales.any? %>
+        <%= form_with url: add_translation_post_path(post), method: :post, class: "translation-form" do |form| %>
+          <div class="field">
+            <%= form.label :locale, t("product_tours.dashboard.add_language", default: "Add another language") %>
+            <%= form.select :locale,
+                            options_for_select(@missing_translation_locales.map { |locale| [product_tours_locale_name(locale), locale] }) %>
+          </div>
+          <%= form.submit t("product_tours.dashboard.add_translation", default: "Add translation"), class: "button" %>
+        <% end %>
+      <% else %>
+        <p class="muted translation-complete"><%= t("product_tours.dashboard.all_languages_added", default: "All available languages have been added.") %></p>
+      <% end %>
+    </article>
+
   </div>
 </section>

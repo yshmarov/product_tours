@@ -1,6 +1,8 @@
 vi:
   product_tours:
     close: "Đóng"
+    back: "Quay lại"
+    next: "Tiếp theo"
     done: "Xong"
     dialog: "Hướng dẫn sản phẩm"
     video: "Video hướng dẫn"

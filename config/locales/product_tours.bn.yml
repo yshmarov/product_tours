@@ -1,6 +1,8 @@
 bn:
   product_tours:
     close: "বন্ধ করুন"
+    back: "ফিরে যান"
+    next: "পরবর্তী"
     done: "সম্পন্ন"
     dialog: "পণ্য টিউটোরিয়াল"
     video: "টিউটোরিয়াল ভিডিও"

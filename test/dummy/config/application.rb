@@ -21,8 +21,7 @@ module Dummy
 
     config.content_security_policy do |policy|
       policy.script_src :self
-      policy.frame_src :self, "https://www.youtube-nocookie.com", "https://player.vimeo.com",
-                       "https://www.loom.com", "https://www.tella.tv", "https://embed.voomly.com"
+      policy.frame_src :self
     end
     config.content_security_policy_nonce_generator = ->(_request) { "testnonce" }
     config.content_security_policy_nonce_directives = %w[script-src]

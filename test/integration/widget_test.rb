@@ -10,7 +10,13 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-product-tours-config'
     assert_includes response.body, '<script src="/product_tours/widget.js?v='
     assert_includes response.body, 'nonce="testnonce"'
-    assert_includes response.body, 'data-product-tour="missing_demo"'
+    assert_includes response.body, 'data-product-tour="demo_walkthrough_start"'
+    assert_includes response.body, 'data-product-tour="demo_draft"'
+    assert_includes response.body, 'data-product-tour="demo_missing_post"'
+    refute_includes response.body, 'data-product-tour="demo_walkthrough_features"'
+    ProductTours::ContentSecurityPolicy::FRAME_SOURCES.each do |source|
+      assert_includes response.headers.fetch('Content-Security-Policy'), source
+    end
   end
 
   test 'renders no widget tag when disabled' do
@@ -25,6 +31,14 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal 'text/javascript', response.media_type
     assert_includes response.body, 'data-product-tour'
+    assert_includes response.body, 'element("div", "pt-head")'
+    assert_includes response.body, 'background:rgba(0,0,0,.45)'
+    assert_includes response.body, 'max-width:440px'
+    assert_includes response.body, 'border-radius:14px;padding:20px'
+    assert_includes response.body, 'background:#2563eb'
+    assert_includes response.body, 'height:100dvh;max-height:100dvh;border-radius:0'
+    refute_includes response.body, 'animation:pt-enter'
+    refute_includes response.body, 'title.tabIndex = -1'
     assert_match(/max-age=315\d+/, response.headers['Cache-Control'])
 
     get '/product_tours/dashboard.css'
@@ -46,23 +60,49 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_equal '/billing', payload.dig('action', 'url')
   end
 
+  test 'resolves linked posts with a useful default action label' do
+    create_post(key: 'next_step', title: 'Next step')
+    create_post(action_post_key: 'next_step')
+
+    get '/product_tours/widget/post', params: { key: 'billing_setup' }
+
+    assert_response :ok
+    payload = response.parsed_body
+    assert_equal 'next_step', payload.dig('action', 'postKey')
+    assert_equal 'Next', payload.dig('action', 'label')
+    assert_nil payload.dig('action', 'url')
+  end
+
   test 'reports unresolved draft and missing triggers without opening' do
-    report_unresolved!
-    create_post(status: 'draft')
+    ProductTours::Seeds.load!
     events = []
+    reports = []
+    reporter = Object.new
+    reporter.define_singleton_method(:report) do |error, handled:, severity:, context:, source:|
+      reports << [error, { handled: handled, severity: severity, context: context, source: source }]
+    end
+    production = ActiveSupport::EnvironmentInquirer.new('production')
+    original_environment = Rails.instance_variable_get(:@_env)
+    Rails.instance_variable_set(:@_env, production)
+    Rails.error.subscribe(reporter)
     subscriber = ActiveSupport::Notifications.subscribe('product_tours.unresolved_trigger') do |*args|
       events << args.last
     end
 
-    get '/product_tours/widget/post', params: { key: 'billing_setup', page_url: 'https://app.test/path?secret=1' }
+    get '/product_tours/widget/post', params: { key: 'demo_draft', page_url: 'https://app.test/path?secret=1' }
     assert_response :not_found
     assert_equal 'unpublished', events.last[:reason]
     assert_equal 'https://app.test/path', events.last[:page_url]
 
-    get '/product_tours/widget/post', params: { key: 'missing' }
+    get '/product_tours/widget/post', params: { key: 'demo_missing_post' }
     assert_response :not_found
     assert_equal 'missing', events.last[:reason]
+    assert_equal 2, reports.size
+    assert(reports.all? { |_error, options| options[:handled] == true })
+    assert(reports.all? { |error, _options| error.is_a?(ProductTours::UnresolvedTriggerError) })
   ensure
+    Rails.error.unsubscribe(reporter) if reporter
+    Rails.instance_variable_set(:@_env, original_environment) if original_environment
     ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
   end
 
@@ -72,10 +112,8 @@ class WidgetTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test 'emits meaningful lifecycle signals with host context' do
+  test 'emits minimal lifecycle signals for host-owned analytics' do
     create_post
-    ProductTours.config.current_user = ->(_request) { fake_user }
-    ProductTours.config.tenant = ->(_request) { 'gid://dummy/Organization/7' }
     payloads = []
     subscriber = ActiveSupport::Notifications.subscribe('product_tours.completed') do |*args|
       payloads << args.last
@@ -89,21 +127,72 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_response :no_content
     assert_equal 1, payloads.size
     payload = payloads.first
-    assert_equal '42', payload[:user_id]
-    assert_equal 'Ada Lovelace', payload[:user_label]
-    assert_equal 'gid://dummy/Organization/7', payload[:tenant]
+    assert_equal 'billing_setup', payload[:key]
+    assert_equal 'en', payload[:locale]
+    assert_equal 'action', payload[:source]
     assert_equal 'https://app.test/billing', payload[:page_url]
-    assert_equal({ 'progress' => '1' }, payload[:metadata])
-    assert_nil payload[:visitor_token]
+    refute_includes payload, :metadata
+    refute_includes payload, :user_id
+    refute_includes payload, :user_label
+    refute_includes payload, :tenant
+    refute_includes payload, :visitor_token
   ensure
     ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
   end
 
-  test 'gives anonymous signals a stable visitor cookie' do
+  test 'does not create a tracking cookie' do
     create_post
     post '/product_tours/widget/signal', params: { key: 'billing_setup', event_action: 'viewed', source: 'modal' }
 
     assert_response :no_content
-    assert cookies['product_tours_vid'].present?
+    assert_nil cookies['product_tours_vid']
+  end
+
+  test 'resolves the requested locale and falls back to the default locale when missing' do
+    create_post(title: 'English billing')
+
+    get '/product_tours/widget/post', params: { key: 'billing_setup', locale: 'fr' }
+    assert_response :ok
+    assert_equal 'English billing', response.parsed_body['title']
+    assert_equal 'en', response.parsed_body['locale']
+
+    create_post(locale: 'fr', title: 'Facturation')
+    get '/product_tours/widget/post', params: { key: 'billing_setup', locale: 'fr' }
+    assert_response :ok
+    assert_equal 'Facturation', response.parsed_body['title']
+    assert_equal 'fr', response.parsed_body['locale']
+  end
+
+  test 'does not bypass a draft translation with a published default-locale tutorial' do
+    create_post(title: 'English billing')
+    create_post(locale: 'fr', title: 'Facturation', status: 'draft')
+
+    error = assert_raises(ProductTours::UnresolvedTriggerError) do
+      get '/product_tours/widget/post', params: { key: 'billing_setup', locale: 'fr' }
+    end
+
+    assert_equal 'unpublished', error.payload[:reason]
+    assert_equal 'fr', error.payload[:locale]
+  end
+
+  test 'serves linked navigation behavior and localized Back copy' do
+    get '/sample'
+    config = response.body.match(%r{<script type="application/json" data-product-tours-config>(.*?)</script>})[1]
+
+    assert_equal 'Back', JSON.parse(config).dig('labels', 'back')
+
+    get '/product_tours/widget.js'
+    assert_includes response.body, 'history.push(post)'
+    assert_includes response.body, 'link would create a navigation cycle'
+    assert_includes response.body, 'element("button", "pt-back"'
+    refute_includes response.body, '"\\u2039 " + config.labels.back'
+    assert_includes response.body, 'showFirstVideoFrame(player)'
+    assert_includes response.body, 'fetchPost(key, config.locale)'
+    assert_includes response.body, 'fetchPost(nextKey, post.locale)'
+    assert_includes response.body, 'locale: session.locale'
+    refute_includes response.body, 'video_ended'
+    refute_includes response.body, 'next_key'
+    refute_includes response.body, 'previous_key'
+    refute_includes response.body, 'metadata: metadata'
   end
 end

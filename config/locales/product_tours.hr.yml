@@ -1,6 +1,8 @@
 hr:
   product_tours:
     close: "Zatvori"
+    back: "Natrag"
+    next: "Dalje"
     done: "Gotovo"
     dialog: "Vodič kroz proizvod"
     video: "Video vodič"

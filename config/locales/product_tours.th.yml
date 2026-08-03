@@ -1,6 +1,8 @@
 th:
   product_tours:
     close: "ปิด"
+    back: "ย้อนกลับ"
+    next: "ถัดไป"
     done: "เสร็จสิ้น"
     dialog: "บทแนะนำผลิตภัณฑ์"
     video: "วิดีโอบทแนะนำ"

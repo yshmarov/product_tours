@@ -19,6 +19,8 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     assert_migration 'db/migrate/create_product_tours_posts.rb' do |migration|
       assert_includes migration, 'create_table :product_tours_posts'
       assert_includes migration, '%i[locale key], unique: true'
+      assert_includes migration, 't.string :action_post_key'
+      assert_includes migration, 'ProductTours::Seeds.load_for_install!'
     end
     assert_file 'config/routes.rb', %r{mount_product_tours at: "/product_tours"}
   end

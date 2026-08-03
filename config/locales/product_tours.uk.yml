@@ -1,6 +1,8 @@
 uk:
   product_tours:
     close: "Закрити"
+    back: "Назад"
+    next: "Далі"
     done: "Готово"
     dialog: "Посібник із продукту"
     video: "Навчальне відео"

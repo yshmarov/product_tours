@@ -14,6 +14,10 @@ ProductTours::Engine.routes.draw do
 
   resources :posts do
     post :refresh_video_metadata, on: :member
+    post :add_translation, on: :member
+    patch :publish, on: :member
+    patch :unpublish, on: :member
+    get :video_preview, on: :collection
   end
   root to: 'posts#index'
 end

@@ -1,6 +1,8 @@
 ar:
   product_tours:
     close: "إغلاق"
+    back: "رجوع"
+    next: "التالي"
     done: "تم"
     dialog: "دليل المنتج"
     video: "فيديو تعليمي"

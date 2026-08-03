@@ -8,19 +8,20 @@ Gem::Specification.new do |spec|
   spec.authors = ['Yaroslav Shmarov']
   spec.email = ['yaroslav.shmarov@clickfunnels.com']
 
-  spec.summary = 'Self-hosted product tutorials for Rails apps.'
+  spec.summary = 'Self-hosted product tours and video tutorials for Rails apps.'
   spec.description = <<~DESCRIPTION
-    A mountable Rails engine for publishing individual in-app tutorials and
-    opening them from host-owned buttons or links. Posts, videos, and admin UI
-    stay in your Rails application; lifecycle activity is exposed through
-    ActiveSupport::Notifications for the analytics system you already use.
+    A mountable Rails engine for publishing in-app product tutorials, linking
+    them into lightweight walkthroughs, and opening them from host-owned buttons
+    or links. Content, videos, and admin UI stay in your Rails application;
+    lifecycle activity is exposed through ActiveSupport::Notifications for the
+    analytics system you already use.
   DESCRIPTION
   spec.homepage = 'https://github.com/yshmarov/product_tours'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.2'
 
   spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = spec.homepage
+  spec.metadata['source_code_uri'] = "#{spec.homepage}/tree/main"
   spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/CHANGELOG.md"
   spec.metadata['bug_tracker_uri'] = "#{spec.homepage}/issues"
   spec.metadata['rubygems_mfa_required'] = 'true'

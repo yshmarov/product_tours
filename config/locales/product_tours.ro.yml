@@ -1,6 +1,8 @@
 ro:
   product_tours:
     close: "Închide"
+    back: "Înapoi"
+    next: "Înainte"
     done: "Gata"
     dialog: "Tutorial de produs"
     video: "Videoclip tutorial"
