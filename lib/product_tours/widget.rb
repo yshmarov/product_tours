@@ -16,7 +16,11 @@ module ProductTours
       def dashboard_stylesheet = @dashboard_stylesheet ||= File.read(DASHBOARD_STYLESHEET_SOURCE)
       def fingerprint = @fingerprint ||= Digest::MD5.hexdigest(javascript)
       def dashboard_fingerprint = @dashboard_fingerprint ||= Digest::MD5.hexdigest(dashboard_javascript)
-      def dashboard_stylesheet_fingerprint = @dashboard_stylesheet_fingerprint ||= Digest::MD5.hexdigest(dashboard_stylesheet)
+
+      # Not an endless def like its neighbours: the one-liner is 126 characters.
+      def dashboard_stylesheet_fingerprint
+        @dashboard_stylesheet_fingerprint ||= Digest::MD5.hexdigest(dashboard_stylesheet)
+      end
 
       def snippet(locale:, nonce: nil)
         nonce_attr = nonce ? %( nonce="#{ERB::Util.html_escape(nonce)}") : ''
