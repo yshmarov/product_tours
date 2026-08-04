@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-04
+
+- Added `AGENTS.md`: install and integration instructions written for coding
+  agents — that tutorials are content managed in the dashboard rather than
+  created from migrations, the key format, the request-shaped config lambdas,
+  that the engine appends provider hosts to the app's `frame-src`, and the
+  `product_tours.unresolved_trigger` notification that turns "my button does
+  nothing" into a log line. It ships inside the gem, so
+  `cat "$(bundle show product_tours)/AGENTS.md"` works from a host app.
+- The dummy app pins `queue_adapter = :test` for the test suite. Attaching a
+  video enqueues Active Storage's analysis job, and the default `:async` adapter
+  runs it on a background thread with its own database connection — writes no
+  test transaction covers, which is how a suite starts failing order-dependently
+  in a test that never created a row. No effect on the gem itself.
+
 ## [0.1.1] - 2026-08-04
 
 - Reworked the README into an installation-first, skimmable product guide that

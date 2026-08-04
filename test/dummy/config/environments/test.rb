@@ -8,5 +8,11 @@ Rails.application.configure do
   config.action_controller.allow_forgery_protection = false
   config.active_support.deprecation = :stderr
   config.active_storage.service = :test
+  # Not the default :async adapter. Attaching a video enqueues Active Storage's
+  # analysis job, and :async runs it on a background thread that checks out its
+  # own connection — writes that no test transaction covers, landing in the
+  # middle of whatever runs next. That is where an order-dependent failure in a
+  # test that never created a row comes from. Nothing here needs a job to run.
+  config.active_job.queue_adapter = :test
   config.cache_store = :memory_store
 end

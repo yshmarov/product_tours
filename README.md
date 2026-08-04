@@ -54,6 +54,11 @@ small set of working tutorials so you can try the modal immediately.
 Ruby >= 3.2 · Rails >= 7.1 · Active Storage only for uploaded videos · Action
 Text only for rich descriptions.
 
+Installing with a coding agent? Point it at [AGENTS.md](AGENTS.md) — the same
+steps in the order an agent needs them, plus the gates it tends to get wrong and
+the things it should not do. It ships inside the gem, so
+`cat "$(bundle show product_tours)/AGENTS.md"` works from any app that bundles it.
+
 ## What you get
 
 | | |
