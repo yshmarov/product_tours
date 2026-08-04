@@ -347,18 +347,6 @@ CI runs Rails 7.1 / 7.2 / 8.0 / 8.1 against Ruby 3.2 / 3.3 / 3.4.
 Bug reports and pull requests are welcome. The most useful report is a real
 Rails app and the exact point where installation or authoring felt confusing.
 
-## Also by the same author
-
-- [testimonials](https://github.com/yshmarov/testimonials) — testimonials,
-  video reviews, and NPS for Rails.
-- [livechat](https://github.com/yshmarov/livechat) — in-app support messaging
-  for Rails.
-- [ideasbugs](https://github.com/yshmarov/ideasbugs) — in-app bug reports and
-  feature requests.
-- [i18n_proofreading](https://github.com/yshmarov/i18n_proofreading) — in-context
-  translation proofreading.
-- [SupeRails](https://superails.com) — Rails screencasts.
-
 ## One family
 
 Five Rails engines built on the same backbone, so adopting a second one is
