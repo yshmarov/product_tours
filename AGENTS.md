@@ -107,6 +107,7 @@ There are five options. That is the whole surface.
 | --- | --- | --- |
 | `authorize_admin` | development only | **Who can read and edit tutorials. Set before deploying.** |
 | `enabled` | everyone | Per-request gate for the widget and its endpoints |
+| `base_controller_class` | `ActionController::Base` | Controller the dashboard inherits. Name your admin's and it adopts that layout, helpers, authentication and request context. Public endpoints never inherit it. |
 | `admin_layout` | `product_tours/application` | Render the dashboard inside your admin shell |
 | `mount_path` | `"/product_tours"` | Keep in sync with `mount_product_tours at:` |
 | `storage_service` | app default | Active Storage service for uploaded video (a `storage.yml` key) |
@@ -117,6 +118,8 @@ There are five options. That is the whole surface.
 
 | Symptom | Cause |
 | --- | --- |
+| `NameError` for one of your own helpers in the dashboard | `isolate_namespace` scopes `helper` to the engine. Use `config.base_controller_class` so the dashboard inherits your helpers, rather than `admin_layout` alone. |
+| `NotNullViolation` attaching a file on a uuid-keyed app | The tables were generated bigint. Set `primary_key_type` in `config.generators` before installing, or migrate them to uuid. |
 | The trigger button does nothing | No tutorial with that key, or it is still a draft, or `product_tours_tag` is missing from the layout. Subscribe to `product_tours.unresolved_trigger` to see which |
 | `/product_tours` returns 403 "Set ProductTours.config.authorize_admin to grant access" | Exactly what it says: still at the development-only default |
 | Key rejected on save | It must match `/\A[a-z0-9]+(?:[._-][a-z0-9]+)*\z/` — no capitals, no spaces |
@@ -126,6 +129,10 @@ There are five options. That is the whole surface.
 | Duplicate-key error when adding a translation | The key is unique per locale — add the translation from the tutorial page rather than creating a second record by hand |
 
 ---
+
+## One family
+
+`testimonials`, `ideasbugs`, `livechat`, `i18n_proofreading` are the sibling engines. Same install shape, same host hooks (`base_controller_class`, `admin_layout`), same scoped dashboard CSS, same `primary_key_type`-aware migrations — so what you learn here transfers.
 
 ## Working on the gem itself
 
