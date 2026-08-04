@@ -87,6 +87,10 @@
 
 /* Dashboard components — any layout. */
 .pt-dashboard {
+  /* A scoping device, not a layout one: without this the wrapper would
+     become the flex/grid child that the content should be. */
+  display: contents;
+
   & * { box-sizing: border-box; }
   & a { color: var(--pt-accent); text-decoration: none; }
   & a:hover { text-decoration: underline; }
