@@ -2,7 +2,7 @@
 
 class CreateProductToursPosts < ActiveRecord::Migration<%= migration_version %>
   def change
-    create_table :product_tours_posts do |t|
+    create_table :product_tours_posts<%= primary_key_type_option %> do |t|
       t.string :key, null: false
       t.string :locale, null: false
       t.string :status, null: false, default: "draft"
@@ -17,7 +17,6 @@ class CreateProductToursPosts < ActiveRecord::Migration<%= migration_version %>
     end
 
     add_index :product_tours_posts, %i[locale key], unique: true
-    add_index :product_tours_posts, :locale
     add_index :product_tours_posts, :status
 
     reversible do |direction|

@@ -10,7 +10,11 @@ ProductTours::Engine.routes.draw do
     post :signal, to: 'tours#signal'
   end
 
-  get 'media/:id', to: 'media#show', as: :media, constraints: { id: /\d+/ }
+  # No `id: /\d+/` constraint: it made this route bigint-only, which forced the
+  # table to be bigint too, and a uuid-keyed host could then never attach a video
+  # (its active_storage_attachments.record_id is a uuid column). Every
+  # fixed-name route above is declared first, so ordering already disambiguates.
+  get 'media/:id', to: 'media#show', as: :media
 
   resources :posts do
     post :refresh_video_metadata, on: :member

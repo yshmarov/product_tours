@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
-  <%= stylesheet_link_tag "#{dashboard_stylesheet_path}?v=#{ProductTours::Widget.dashboard_stylesheet_fingerprint}",
-                          "data-turbo-track": "reload" %>
-  <%= javascript_include_tag "#{dashboard_script_path}?v=#{ProductTours::Widget.dashboard_fingerprint}",
-                             "data-turbo-track": "reload", defer: true, nonce: true %>
+  <%# The dashboard's stylesheet and script are declared by the views
+      (product_tours/shared/_dashboard), not here, so they survive a host
+      replacing this layout via config.admin_layout. %>
 </head>
-<body class="<%= content_for?(:body_class) ? yield(:body_class) : '' %>">
-  <div class="container">
-    <% if notice.present? %><div class="flash notice"><%= notice %></div><% end %>
-    <% if alert.present? %><div class="flash alert"><%= alert %></div><% end %>
-    <%= yield %>
+<body class="pt-page <%= content_for?(:body_class) ? yield(:body_class) : '' %>">
+  <div class="pt-dashboard">
+    <div class="container">
+      <% if notice.present? %><div class="flash notice"><%= notice %></div><% end %>
+      <% if alert.present? %><div class="flash alert"><%= alert %></div><% end %>
+      <%= yield %>
+    </div>
   </div>
 </body>
 </html>

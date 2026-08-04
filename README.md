@@ -226,7 +226,8 @@ Everything is optional — a development install works with zero config. In
 | --- | --- | --- |
 | `enabled` | everyone | Who can resolve and open published tutorials |
 | `authorize_admin` | development only | **Who can manage content at the mount path** |
-| `admin_layout` | gem layout | Render the dashboard inside your admin shell |
+| `base_controller_class` | `ActionController::Base` | Controller the dashboard inherits — name your admin's and it adopts its layout, helpers and auth |
+| `admin_layout` | gem layout | Just the shell, if you don't want the whole controller |
 | `storage_service` | app default | Named Active Storage service for uploaded videos |
 | `mount_path` | `/product_tours` | Keep in sync only when mounting the engine manually |
 

@@ -2,11 +2,13 @@
 
 require 'rails/generators'
 require 'rails/generators/active_record'
+require_relative '../migration_helpers'
 
 module ProductTours
   module Generators
     class InstallGenerator < Rails::Generators::Base
       include ActiveRecord::Generators::Migration
+      include MigrationHelpers
 
       source_root File.expand_path('templates', __dir__)
       desc 'Installs product_tours: initializer, posts migration, and engine mount.'
@@ -32,12 +34,6 @@ module ProductTours
         say 'Run `bin/rails product_tours:seed_demo` any time to refresh every demo locale.'
         say 'Run `bin/rails active_storage:install` for uploads and '
         say '`bin/rails action_text:install` for rich descriptions.\n'
-      end
-
-      private
-
-      def migration_version
-        "[#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}]"
       end
     end
   end

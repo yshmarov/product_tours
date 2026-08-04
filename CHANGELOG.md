@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.2.0
+
+- **`config.admin_layout` now works on its own.** The dashboard's stylesheet and
+  script were declared in the gem's layout, so replacing that layout dropped
+  both and the dashboard rendered unstyled with its client-side behaviour dead.
+  They move into the views, so every layout gets them with nothing asked of the
+  host.
+- **The dashboard stylesheet no longer claims selectors it does not own.** It
+  styled bare `*`, `html`, `body` and `a`, and its `.container`, `.card` and
+  `.tabs` are names other frameworks use too, so a host that did load it had its
+  own chrome restyled. Component rules now nest inside a `.pt-dashboard` wrapper
+  the views render, and every custom property is `--pt-` prefixed so it can
+  neither overwrite a host's nor be overwritten. The page-frame rules stay keyed
+  to the body classes only the gem's own layout sets.
+- **Added `config.base_controller_class`.** Name the controller your own admin
+  inherits from and the dashboard adopts its layout, helpers, authentication and
+  request context — the things `admin_layout` cannot give you. It reparents the
+  dashboard only; the widget, tour-resolution and media endpoints stay on the
+  engine's public controller, so it can never demand a staff session from a
+  visitor. Default is unchanged.
+- **Migrations follow the host's `primary_key_type`,** the same
+  `Rails.configuration.generators` lookup Rails' own Active Storage, Action Text
+  and Action Mailbox migrations do. A uuid-keyed app has a uuid
+  `active_storage_attachments.record_id`, so a bigint table here could never
+  hold a video: `attach` raised `NotNullViolation`. A host that set nothing gets
+  an identical migration to before.
+- **Dropped the `id: /\d+/` constraint on the media route,** which was what
+  forced the table to be bigint. It was never load-bearing: every fixed-name
+  route is declared first.
+- **Dropped the redundant `(locale)` index.** A B-tree serves any leftmost
+  prefix, so `(locale, key)` already covered it; it only cost write time and
+  disk. Existing installs keep theirs until they drop it:
+  `remove_index :product_tours_posts, :locale`.
+- A `BackboneTest` now fails the build on any of the above regressing.
+
 ## [Unreleased]
 
 ## [0.1.2] - 2026-08-04

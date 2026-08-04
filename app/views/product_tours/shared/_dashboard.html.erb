@@ -1,0 +1,16 @@
+<%# The dashboard's own shell, rendered by the views rather than the layout.
+    That is deliberate: `config.admin_layout` and `config.base_controller_class`
+    both let a host replace the layout, and assets declared in a layout the host
+    replaces simply vanish — the dashboard then renders unstyled with its
+    client-side behaviour dead. Declaring them here means every layout works,
+    host or gem, and a host has nothing to wire up.
+
+    The `pt-dashboard` wrapper is what scopes dashboard.css (see the comment at
+    the top of that file), so it has to enclose the content, not precede it. %>
+<%= stylesheet_link_tag "#{dashboard_stylesheet_path}?v=#{ProductTours::Widget.dashboard_stylesheet_fingerprint}",
+                        "data-turbo-track": "reload" %>
+<%= javascript_include_tag "#{dashboard_script_path}?v=#{ProductTours::Widget.dashboard_fingerprint}",
+                           "data-turbo-track": "reload", defer: true, nonce: true %>
+<div class="pt-dashboard">
+  <%= yield %>
+</div>

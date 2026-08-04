@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 module ProductTours
-  class PostsController < ApplicationController
+  class PostsController < DashboardController
     PER_PAGE = 50
 
-    layout :product_tours_admin_layout
-    before_action :require_admin
     before_action :set_post,
                   only: %i[show edit update destroy refresh_video_metadata add_translation publish unpublish]
     before_action :load_linkable_posts, only: %i[new create edit update]

@@ -21,7 +21,6 @@ ActiveRecord::Schema.define do
     t.timestamps
   end
   add_index :product_tours_posts, %i[locale key], unique: true
-  add_index :product_tours_posts, :locale
   add_index :product_tours_posts, :status
 
   create_table :active_storage_blobs, force: true do |t|
