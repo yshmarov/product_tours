@@ -31,13 +31,13 @@ class DashboardTest < ActionDispatch::IntegrationTest
     end
 
     get "/product_tours/posts?post_id=#{created.id}"
-    assert_includes response.body, 'class="post-panel"'
+    assert_includes response.body, 'class="detail-panel"'
     assert_includes response.body, 'class="card pad preview-card"'
     assert_select '.translations-card h2', text: 'Languages'
     assert_select "form[action='/product_tours/posts/#{created.id}/add_translation']"
 
     get "/product_tours/posts/#{created.id}"
-    assert_select '.post-panel .panel-head', count: 0
+    assert_select '.detail-panel .panel-head', count: 0
     assert_select '.preview-card > h2', text: 'Invite your team'
     assert_select '.preview-card > h2', text: 'Preview', count: 0
     assert_select '.details-card' do
@@ -103,8 +103,8 @@ class DashboardTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'function syncVideoSourcePicker'
 
     get '/product_tours/dashboard.css'
-    assert_includes response.body, '.pt-show .post-panel { width: 100%; }'
-    refute_includes response.body, '.pt-show .post-panel { max-width:'
+    assert_includes response.body, '.pt-show .detail-panel { width: 100%; }'
+    refute_includes response.body, '.pt-show .detail-panel { max-width:'
   end
 
   test 'previews supported video URLs for the form' do
