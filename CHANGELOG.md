@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+## [0.3.1] - 2026-08-08
+
+- **Hosts can handle lifecycle events with their own request context.** Set
+  `config.on_event` to a callable accepting `(name, payload, request)` when a
+  `viewed`, `dismissed`, or `completed` signal must resolve a signed session,
+  user, account, or tenant that deliberately does not belong in the gem. The
+  existing `ActiveSupport::Notifications` events and their minimal payloads are
+  unchanged. The hook runs inline, so slow work should be enqueued; exceptions
+  are logged and never turn a working tutorial action into a visitor-facing
+  failure.
+
 ## 0.3.0
 
 - **One design system across the family.** The stylesheet now opens with a
@@ -59,8 +72,6 @@
   disk. Existing installs keep theirs until they drop it:
   `remove_index :product_tours_posts, :locale`.
 - A `BackboneTest` now fails the build on any of the above regressing.
-
-## [Unreleased]
 
 ## [0.1.2] - 2026-08-04
 
@@ -122,6 +133,7 @@
 - Removed generic tutorial duplication now that translations provide the only
   intentional content-copying workflow.
 
-[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/yshmarov/product_tours/compare/v0.3.0...v0.3.1
 [0.1.1]: https://github.com/yshmarov/product_tours/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/yshmarov/product_tours/releases/tag/v0.1.0

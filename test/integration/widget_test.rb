@@ -140,6 +140,46 @@ class WidgetTest < ActionDispatch::IntegrationTest
     ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
   end
 
+  test 'passes lifecycle signals and the raw request to the host hook' do
+    create_post
+    calls = []
+    ProductTours.config.on_event = lambda do |name, payload, request|
+      calls << [name, payload, request]
+    end
+
+    post '/product_tours/widget/signal', params: {
+      key: 'billing_setup', event_action: 'viewed', source: 'modal',
+      page_url: 'https://app.test/billing?token=secret'
+    }, headers: { 'X-Product-Tours-Context' => 'workspace-123' }
+
+    assert_response :no_content
+    assert_equal 1, calls.size
+
+    name, payload, raw_request = calls.first
+    assert_equal 'product_tours.viewed', name
+    assert_equal 'billing_setup', payload[:key]
+    assert_equal 'https://app.test/billing', payload[:page_url]
+    assert_instance_of ActionDispatch::Request, raw_request
+    assert_equal '/product_tours/widget/signal', raw_request.path
+    assert_equal 'workspace-123', raw_request.headers['X-Product-Tours-Context']
+  end
+
+  test 'does not let a raising host event hook break the visitor flow' do
+    create_post
+    called = false
+    ProductTours.config.on_event = lambda do |_name, _payload, _request|
+      called = true
+      raise 'boom'
+    end
+
+    post '/product_tours/widget/signal', params: {
+      key: 'billing_setup', event_action: 'completed', source: 'action'
+    }
+
+    assert_response :no_content
+    assert called
+  end
+
   test 'does not create a tracking cookie' do
     create_post
     post '/product_tours/widget/signal', params: { key: 'billing_setup', event_action: 'viewed', source: 'modal' }

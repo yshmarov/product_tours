@@ -21,6 +21,13 @@ ProductTours.configure do |config|
   # Tutorials resolve in the page's current I18n.locale and fall back to
   # I18n.default_locale when no translation exists.
 
+  # Optional lifecycle hook. Receives the event name, minimal payload, and raw
+  # request so the host can resolve its own user/account context. Runs inline;
+  # enqueue slow work. Hook errors are logged and never break the visitor flow.
+  # config.on_event = lambda do |name, payload, request|
+  #   AnalyticsJob.perform_later(name, payload, request.session[:user_id])
+  # end
+
   # Optional dedicated Active Storage service for uploaded videos.
   # config.storage_service = :product_tours
 

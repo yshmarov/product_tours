@@ -81,7 +81,8 @@ YouTube, Vimeo, Loom, Tella, Voomly, a direct MP4/WebM URL, or an uploaded file 
 
 ### Lifecycle events
 
-Subscribe in an initializer; there is no callback config to set.
+Subscribe in an initializer when your normal request middleware already sets
+host identity:
 
 ```ruby
 ActiveSupport::Notifications.subscribe("product_tours.completed") do |*, payload|
@@ -90,6 +91,20 @@ end
 ```
 
 Names: `product_tours.viewed`, `product_tours.dismissed`, `product_tours.completed`, and `product_tours.unresolved_trigger` — the last one fires when a `data-product-tour` button names a key that does not resolve. Subscribe to it in development; it turns "my button does nothing" into a log line naming the key.
+
+The public widget controller deliberately does not inherit the host's controller.
+If that means a subscriber cannot see the host's current user/account context,
+configure the request-aware lifecycle hook instead:
+
+```ruby
+config.on_event = lambda do |name, payload, request|
+  user = request.env["warden"]&.user
+  ProductTourEventJob.perform_later(name, payload, user&.id)
+end
+```
+
+It receives only `viewed`, `dismissed`, and `completed`, runs inline, and logs
+exceptions without breaking the visitor flow. Keep it fast or enqueue a job.
 
 ### Do not
 
@@ -101,7 +116,7 @@ Names: `product_tours.viewed`, `product_tours.dismissed`, `product_tours.complet
 
 ### Configuration
 
-There are five options. That is the whole surface.
+There are seven options. That is the whole surface.
 
 | Option | Default | What it does |
 | --- | --- | --- |
@@ -109,6 +124,7 @@ There are five options. That is the whole surface.
 | `enabled` | everyone | Per-request gate for the widget and its endpoints |
 | `base_controller_class` | `ActionController::Base` | Controller the dashboard inherits. Name your admin's and it adopts that layout, helpers, authentication and request context. Public endpoints never inherit it. |
 | `admin_layout` | `product_tours/application` | Render the dashboard inside your admin shell |
+| `on_event` | no-op | Handle lifecycle events with `(name, payload, request)` when host identity must be resolved from the raw request |
 | `mount_path` | `"/product_tours"` | Keep in sync with `mount_product_tours at:` |
 | `storage_service` | app default | Active Storage service for uploaded video (a `storage.yml` key) |
 

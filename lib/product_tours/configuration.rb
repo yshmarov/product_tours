@@ -7,7 +7,7 @@ module ProductTours
     DEFAULT_ADMIN_LAYOUT = 'product_tours/application'
 
     attr_accessor :enabled, :authorize_admin, :admin_layout, :mount_path,
-                  :storage_service
+                  :storage_service, :on_event
 
     # The controller the DASHBOARD inherits from, as a String so it resolves
     # lazily rather than at config time. Default: a plain
@@ -31,6 +31,7 @@ module ProductTours
       @base_controller_class = 'ActionController::Base'
       @mount_path = '/product_tours'
       @storage_service = nil
+      @on_event = ->(_name, _payload, _request) {}
     end
 
     def widget_endpoint = "#{mount_path.to_s.chomp('/')}/widget"

@@ -32,11 +32,19 @@ module ProductTours
         page_url: clean_page_url(params[:page_url]),
         source: params[:source].to_s.presence
       }
-      ActiveSupport::Notifications.instrument("product_tours.#{action}", payload)
+      event_name = "product_tours.#{action}"
+      ActiveSupport::Notifications.instrument(event_name, payload)
+      notify_host(event_name, payload)
       head :no_content
     end
 
     private
+
+    def notify_host(event_name, payload)
+      ProductTours.config.on_event.call(event_name, payload, request)
+    rescue StandardError => e
+      Rails.logger.error("product_tours: on_event hook raised #{e.class}: #{e.message}")
+    end
 
     def post_payload(post)
       video = post.resolved_video
