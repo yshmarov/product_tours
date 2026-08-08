@@ -92,8 +92,11 @@ the things it should not do. It ships inside the gem, so
 
 <img src="docs/screenshots/03-mobile.jpg" alt="The product tutorial modal filling a mobile viewport with a video and primary action" width="390">
 
-On screens up to 480px the modal becomes a full-screen sheet, respects safe
-areas, and follows `visualViewport` while the mobile keyboard is open.
+Text-only tutorials stay compact at 440px on desktop. A tutorial with video
+automatically opens at up to 760px, and a walkthrough stays at that size after
+its first video so the layout does not jump between steps. On screens up to
+480px the modal becomes a full-screen sheet, respects safe areas, and follows
+`visualViewport` while the mobile keyboard is open.
 
 ## Why a gem
 
