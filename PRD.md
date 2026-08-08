@@ -339,6 +339,8 @@ Payload: `key`, `locale`, `reason`, and query-free `page_url`.
 - focus trap while open
 - Escape dismisses
 - video/control elements remain keyboard reachable
+- compact 440px text dialogs and automatic 760px video dialogs on desktop
+- walkthroughs stay wide after showing video to avoid resizing between steps
 - full-screen layout at <=480px
 - safe-area padding and `visualViewport` adjustment
 - RTL locale support

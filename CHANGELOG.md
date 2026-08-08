@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-08
+
+- **Video tutorials are comfortably watchable without entering full screen.**
+  Text-only dialogs remain compact at 440px, while a tutorial containing video
+  automatically expands to 760px on desktop. Once a video appears in an open
+  walkthrough, the dialog stays wide for its remaining steps so the layout does
+  not jump back and forth. Mobile dialogs remain full-screen. There is no new
+  configuration or API to adopt.
+
 ## [0.3.1] - 2026-08-08
 
 - **Hosts can handle lifecycle events with their own request context.** Set
@@ -133,7 +142,8 @@
 - Removed generic tutorial duplication now that translations provide the only
   intentional content-copying workflow.
 
-[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/yshmarov/product_tours/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/yshmarov/product_tours/compare/v0.3.0...v0.3.1
 [0.1.1]: https://github.com/yshmarov/product_tours/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/yshmarov/product_tours/releases/tag/v0.1.0
