@@ -15,7 +15,7 @@ class InstallGeneratorTest < Rails::Generators::TestCase
 
     run_generator
 
-    assert_file 'config/initializers/product_tours.rb'
+    assert_file 'config/initializers/product_tours.rb', /config\.on_event/
     assert_migration 'db/migrate/create_product_tours_posts.rb' do |migration|
       assert_includes migration, 'create_table :product_tours_posts'
       assert_includes migration, '%i[locale key], unique: true'

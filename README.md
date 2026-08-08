@@ -228,6 +228,7 @@ Everything is optional — a development install works with zero config. In
 | `authorize_admin` | development only | **Who can manage content at the mount path** |
 | `base_controller_class` | `ActionController::Base` | Controller the dashboard inherits — name your admin's and it adopts its layout, helpers and auth |
 | `admin_layout` | gem layout | Just the shell, if you don't want the whole controller |
+| `on_event` | no-op | Handle lifecycle events with the raw request and host-owned identity/account context |
 | `storage_service` | app default | Named Active Storage service for uploaded videos |
 | `mount_path` | `/product_tours` | Keep in sync only when mounting the engine manually |
 
@@ -236,6 +237,9 @@ ProductTours.configure do |config|
   config.enabled = ->(request) { request.env["warden"]&.user.present? }
   config.authorize_admin = ->(request) { request.env["warden"]&.user&.admin? }
   config.admin_layout = "admin/application"
+  config.on_event = lambda do |name, payload, request|
+    AnalyticsJob.perform_later(name, payload, request.session[:user_id])
+  end
   config.storage_service = :product_tours
 end
 ```
@@ -301,6 +305,20 @@ end
 
 Your subscriber can attach `Current.user` or account context. That identity does
 not need to become product-tour configuration.
+
+If the engine's public controller does not run your host controller callbacks,
+use `on_event` instead. It receives the same event name and payload plus the raw
+request, so it can safely resolve the host's signed session:
+
+```ruby
+config.on_event = lambda do |name, payload, request|
+  user = request.env["warden"]&.user
+  ProductTourEventJob.perform_later(name, payload, user&.id)
+end
+```
+
+The hook runs inline; enqueue slow work. Exceptions are logged and do not break
+the visitor flow. `product_tours.unresolved_trigger` remains a notification only.
 
 ## Broken triggers fail loudly, not publicly
 

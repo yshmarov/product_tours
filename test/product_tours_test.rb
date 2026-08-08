@@ -25,6 +25,9 @@ class ProductToursTest < ActiveSupport::TestCase
     assert_equal '/product_tours', ProductTours.config.mount_path
     assert_equal '/product_tours/widget', ProductTours.config.widget_endpoint
     assert_equal I18n.locale.to_s, ProductTours.locale(request)
+    assert_nothing_raised do
+      ProductTours.config.on_event.call('product_tours.viewed', { key: 'welcome' }, request)
+    end
   end
 
   test 'uses the current locale without identity, tenant, or rate configuration' do

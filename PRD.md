@@ -139,7 +139,9 @@ is the complete invocation contract.
 | --- | --- |
 | `enabled` | `true` for every request |
 | `authorize_admin` | development environment only |
+| `base_controller_class` | `ActionController::Base` |
 | `admin_layout` | `product_tours/application` |
+| `on_event` | no-op lifecycle hook |
 | `mount_path` | `/product_tours` |
 | `storage_service` | app Active Storage default |
 
@@ -147,8 +149,9 @@ Request-dependent gates receive the raw request.
 
 There is deliberately no `current_user`, `user_label`, `tenant`, `locale`,
 `rate_limit`, or `raise_on_unresolved_trigger` setting. Locale follows Rails;
-identity belongs in host subscribers; public endpoints are read/signal only;
-environment-specific error behavior is fixed and safe.
+identity belongs in host subscribers or the request-aware `on_event` hook;
+public endpoints are read/signal only; environment-specific error behavior is
+fixed and safe.
 
 ## Data model
 
@@ -308,6 +311,12 @@ source
 
 Video playback does not mean completion. The host may subscribe with Ahoy or
 another analytics system and attach its own identity/account context.
+
+`config.on_event` is the request-aware alternative for hosts whose identity is
+established in controller code the engine's public controller does not inherit.
+It receives `(name, payload, request)` for the same three lifecycle signals. It
+runs inline, logs exceptions without changing the visitor response, and should
+enqueue slow work. Unresolved-trigger reporting is not passed to this hook.
 
 ## Unresolved triggers
 
