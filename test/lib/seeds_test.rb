@@ -35,7 +35,10 @@ class SeedsTest < ActiveSupport::TestCase
       demo_loom demo_tella demo_voomly demo_direct_video demo_walkthrough_finish
     ], keys
     assert_equal %w[youtube vimeo loom tella voomly direct], providers
-    assert_equal 'Get started', current.action_label
+    assert_equal 'Finish tour', current.action_label
+    assert_includes ProductTours::Post.find_by!(locale: 'en', key: 'demo_walkthrough_start')
+                                      .description.to_plain_text,
+                    'real multi-step tour'
   end
 
   test 'loads translated demo posts for all demo locales' do
@@ -46,9 +49,11 @@ class SeedsTest < ActiveSupport::TestCase
     assert_equal first.map(&:id), second.map(&:id)
     assert_equal ProductTours::Seeds::DEMO_LOCALES.sort,
                  ProductTours::Post.distinct.order(:locale).pluck(:locale).sort
-    assert_equal 'Bien démarrer', ProductTours::Post.find_by!(locale: 'fr', key: 'demo_getting_started').title
-    assert_equal 'Първи стъпки', ProductTours::Post.find_by!(locale: 'bg', key: 'demo_getting_started').title
-    assert_equal 'Présentation des fournisseurs vidéo',
+    assert_equal "Ouvrez l'action réelle suivante",
+                 ProductTours::Post.find_by!(locale: 'fr', key: 'demo_getting_started').title
+    assert_equal 'Отворете следващото реално действие',
+                 ProductTours::Post.find_by!(locale: 'bg', key: 'demo_getting_started').title
+    assert_equal 'Bienvenue dans Product Tours',
                  ProductTours::Post.find_by!(locale: 'fr', key: 'demo_walkthrough_start').title
     assert_equal 3, ProductTours::Post.where(key: 'demo_draft', status: 'draft').count
   end

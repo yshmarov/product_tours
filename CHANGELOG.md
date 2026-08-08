@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-08-08
+
+- **The demo walkthrough is now a tour of Product Tours itself.** Its linked
+  steps explain host-owned triggers, post chaining, optional video, drafts,
+  locale-stable keys, lifecycle events, direct and uploaded video delivery, and
+  completion. The standalone buttons still exercise every provider, a draft,
+  a missing key, and an action URL, while making the purpose of each case clear.
+- English, French, and Bulgarian demo posts carry the educational copy. Rich
+  descriptions are added when Action Text is installed; title-only installs
+  still get the guided sequence. The provider videos remain generic examples.
+- `product_tours:seed_demo` preserves demo keys and refreshes their content, so
+  rerunning it overwrites edits to those gem-owned posts. Tutorials with other
+  keys are not touched.
+
 ## [0.3.2] - 2026-08-08
 
 - **Video tutorials are comfortably watchable without entering full screen.**
