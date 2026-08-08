@@ -360,10 +360,14 @@ stack owns persistence and reporting. The gem stays small enough to understand.
 
 ```bash
 bundle exec rake test
+bundle exec rake test:system
 bundle exec rubocop
 ```
 
-CI runs Rails 7.1 / 7.2 / 8.0 / 8.1 against Ruby 3.2 / 3.3 / 3.4.
+The normal suite covers the Rails engine contract. The system task drives the
+real widget through Next, Back, and finish in headless Chrome. CI runs Rails 7.1
+/ 7.2 / 8.0 / 8.1 against Ruby 3.2 / 3.3 / 3.4, plus that browser test once on
+the current bundle.
 
 Bug reports and pull requests are welcome. The most useful report is a real
 Rails app and the exact point where installation or authoring felt confusing.

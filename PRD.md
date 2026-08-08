@@ -1,7 +1,7 @@
 # PRD: product_tours
 
-> Status: **shipped as v0.1.1** on 2026-08-04. Audited against the implementation
-> on 2026-08-04.
+> Status: **shipped as v0.3.3**. Audited against the implementation on
+> 2026-08-08.
 
 ## Product in one sentence
 
@@ -79,7 +79,7 @@ That means:
 
 ## Shipped surface
 
-| Area | v0.1.0 behavior |
+| Area | Current behavior |
 | --- | --- |
 | Install | Generator adds initializer, migration, route mount, instructions, and development demo data |
 | Trigger | Any element with `data-product-tour="key"` |
@@ -94,7 +94,7 @@ That means:
 | Metadata | Safe resolver metadata for every provider; oEmbed title/thumbnail for YouTube, Vimeo, Loom |
 | Events | `viewed`, `dismissed`, `completed`, plus unresolved-trigger reporting |
 | i18n | 26 locale files with parity tests and RTL support |
-| Compatibility | Ruby 3.2–3.4; Rails 7.1, 7.2, 8.0, 8.1 |
+| Compatibility | Ruby >= 3.2; CI covers Ruby 3.2–3.4 and Rails 7.1–8.1 |
 
 ## Public integration contract
 
@@ -172,7 +172,7 @@ fixed and safe.
 Database constraints/indexes:
 
 - unique `[locale, key]`
-- indexes on `locale` and `status`
+- index on `status`; the unique composite index already covers `locale`
 
 Optional framework-backed content:
 
@@ -398,7 +398,7 @@ Sibling gems own those adjacent jobs where appropriate: `testimonials`,
 
 ## Acceptance status
 
-v0.1.1 is accepted when all of the following remain true:
+The current release is accepted when all of the following remain true:
 
 - fresh generated install boots on Rails 7.1+
 - demo migration/task behavior is idempotent
@@ -412,6 +412,7 @@ v0.1.1 is accepted when all of the following remain true:
 - locale files have identical keys
 - tests cover generators, model validation, resolver safety, dashboard CRUD,
   translations, widget resolution, lifecycle events, Turbo, and CSP
+- a real browser test covers linked Next, Back, and finish behavior
 - CI passes Ruby 3.2/3.3/3.4 across Rails 7.1/7.2/8.0/8.1
 
 Changes that violate the boundary above require an explicit product decision,

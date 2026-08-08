@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- Added one headless-Chrome system test that opens a linked walkthrough, moves
+  Next and Back, and finishes it. Capybara and Selenium are development/test
+  dependencies only; the runtime gem API and dependency surface are unchanged.
+- Refreshed the PRD's shipped version, database-index contract, acceptance
+  wording, compatibility wording, and the missing release comparison links.
+
 ## [0.3.3] - 2026-08-08
 
 - **The demo walkthrough is now a tour of Product Tours itself.** Its linked
@@ -36,7 +42,7 @@
   are logged and never turn a working tutorial action into a visitor-facing
   failure.
 
-## 0.3.0
+## [0.3.0] - 2026-08-05
 
 - **One design system across the family.** The stylesheet now opens with a
   shared core — the colour tokens, `.page-head`, `.tabs`, `.filters`, `.card`,
@@ -61,7 +67,17 @@
   button on one line, and a `code.key` truncates inside a list row instead of
   wrapping over three lines.
 
-## 0.2.0
+## [0.2.2] - 2026-08-04
+
+- Restored the intended dashboard width after CSS scoping and documented the
+  shared five-gem family conventions.
+
+## [0.2.1] - 2026-08-04
+
+- Restored the dashboard layout rules that the new scoped wrapper had
+  accidentally overridden.
+
+## [0.2.0] - 2026-08-04
 
 - **`config.admin_layout` now works on its own.** The dashboard's stylesheet and
   script were declared in the gem's layout, so replacing that layout dropped
@@ -156,8 +172,14 @@
 - Removed generic tutorial duplication now that translations provide the only
   intentional content-copying workflow.
 
-[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/yshmarov/product_tours/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/yshmarov/product_tours/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/yshmarov/product_tours/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/yshmarov/product_tours/compare/v0.2.2...v0.3.0
+[0.2.2]: https://github.com/yshmarov/product_tours/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/yshmarov/product_tours/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/yshmarov/product_tours/compare/v0.1.2...v0.2.0
+[0.1.2]: https://github.com/yshmarov/product_tours/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/yshmarov/product_tours/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/yshmarov/product_tours/releases/tag/v0.1.0

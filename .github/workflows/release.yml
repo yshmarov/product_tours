@@ -39,6 +39,7 @@ jobs:
       - name: Validate release
         run: |
           bundle exec rake test
+          bundle exec rake test:system
           bundle exec rubocop
           node --check lib/product_tours/dashboard.js
           node --check lib/product_tours/widget.js

@@ -154,6 +154,7 @@ There are seven options. That is the whole surface.
 
 ```bash
 bundle exec rake test            # minitest, dummy app under test/dummy
+bundle exec rake test:system     # real Next/Back/finish flow in headless Chrome
 bundle exec rubocop              # must be clean
 BUNDLE_GEMFILE=gemfiles/rails_7.1.gemfile bundle exec rake test   # 7.1, 7.2, 8.0, 8.1 in gemfiles/
 ```

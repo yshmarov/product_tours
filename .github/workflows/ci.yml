@@ -25,6 +25,18 @@ jobs:
       - name: Run tests
         run: bundle exec rake test
 
+  system:
+    name: Browser tests (walkthrough)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - name: Run system tests
+        run: bundle exec rake test:system
+
   lint:
     name: RuboCop
     runs-on: ubuntu-latest
