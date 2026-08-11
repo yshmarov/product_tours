@@ -152,6 +152,11 @@ There are seven options. That is the whole surface.
 
 ## Working on the gem itself
 
+The development toolchain is pinned to Ruby 4.0.5 in `mise.toml`. Do not use
+macOS's `/usr/bin/ruby`. In shells, hooks, or automation where mise activation
+is uncertain, explicitly prepend the configured Ruby, for example
+`PATH="$(mise where ruby)/bin:$PATH" bundle exec rake test`.
+
 ```bash
 bundle exec rake test            # minitest, dummy app under test/dummy
 bundle exec rake test:system     # real Next/Back/finish flow in headless Chrome
