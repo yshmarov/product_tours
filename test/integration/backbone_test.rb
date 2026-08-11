@@ -14,11 +14,11 @@ class BackboneTest < ActionDispatch::IntegrationTest
   #    unstyled dashboard, dead client-side behaviour.
   test 'every dashboard page carries its own assets, under any layout' do
     as_admin!
-    post = ProductTours::Post.create!(key: 'welcome', locale: 'en', title: 'Welcome')
+    tour = ProductTours::Tour.create!(key: 'welcome', locale: 'en', title: 'Welcome')
 
     [nil, 'host_admin'].each do |layout|
       ProductTours.config.admin_layout = layout if layout
-      ['/product_tours', "/product_tours/posts/#{post.id}", '/product_tours/posts/new'].each do |path|
+      ['/product_tours', "/product_tours/tours/#{tour.id}", '/product_tours/tours/new'].each do |path|
         get path
 
         assert_response :ok, "#{path} (layout #{layout.inspect}) did not render"
@@ -58,12 +58,12 @@ class BackboneTest < ActionDispatch::IntegrationTest
     assert_equal ProductTours.base_controller, ProductTours::DashboardController.superclass
     assert_equal ActionController::Base, ProductTours::ApplicationController.superclass
 
-    [ProductTours::WidgetsController, ProductTours::ToursController,
+    [ProductTours::WidgetsController, ProductTours::InteractionsController,
      ProductTours::MediaController].each do |controller|
       assert_equal ProductTours::ApplicationController, controller.superclass,
                    "#{controller} must not inherit the host's base controller"
     end
-    assert_equal ProductTours::DashboardController, ProductTours::PostsController.superclass
+    assert_equal ProductTours::DashboardController, ProductTours::ToursController.superclass
   end
 
   test 'base_controller_class resolves a host class lazily, by name' do
@@ -88,7 +88,7 @@ class BackboneTest < ActionDispatch::IntegrationTest
 
     assert_equal 'product_tours/widgets', engine.recognize_path('/dashboard.css', method: :get)[:controller]
     assert_equal 'product_tours/widgets', engine.recognize_path('/widget.js', method: :get)[:controller]
-    assert_equal 'product_tours/posts', engine.recognize_path('/posts', method: :get)[:controller]
+    assert_equal 'product_tours/tours', engine.recognize_path('/tours', method: :get)[:controller]
   end
 
   # A comment containing a comma used to be split as if it were a selector list,
@@ -166,7 +166,7 @@ end
 #    resolved value, and no index may duplicate a leftmost prefix of another.
 class BackboneGeneratorTest < Rails::Generators::TestCase
   tests ProductTours::Generators::InstallGenerator
-  destination File.expand_path('../tmp/backbone', __dir__)
+  destination File.expand_path('../../tmp/backbone', __dir__)
   setup :prepare_destination
   setup :write_routes
 
@@ -174,8 +174,8 @@ class BackboneGeneratorTest < Rails::Generators::TestCase
     with_primary_key_type(:uuid) do
       run_generator
 
-      assert_migration 'db/migrate/create_product_tours_posts.rb' do |migration|
-        assert_match 'create_table :product_tours_posts, id: :uuid', migration
+      assert_migration 'db/migrate/create_product_tours_tours.rb' do |migration|
+        assert_match 'create_table :product_tours_tours, id: :uuid', migration
         refute_match 'primary_key_type', migration
       end
     end
@@ -185,8 +185,8 @@ class BackboneGeneratorTest < Rails::Generators::TestCase
     with_primary_key_type(nil) do
       run_generator
 
-      assert_migration 'db/migrate/create_product_tours_posts.rb' do |migration|
-        assert_match 'create_table :product_tours_posts do |t|', migration
+      assert_migration 'db/migrate/create_product_tours_tours.rb' do |migration|
+        assert_match 'create_table :product_tours_tours do |t|', migration
       end
     end
   end
@@ -196,7 +196,7 @@ class BackboneGeneratorTest < Rails::Generators::TestCase
   test 'no index duplicates a leftmost prefix of another' do
     run_generator
 
-    assert_migration 'db/migrate/create_product_tours_posts.rb' do |migration|
+    assert_migration 'db/migrate/create_product_tours_tours.rb' do |migration|
       indexes = migration.scan(/add_index :(\w+), (?:%i\[([\w\s]+)\]|:(\w+))/).map do |table, composite, single|
         [table, composite ? composite.split : [single]]
       end

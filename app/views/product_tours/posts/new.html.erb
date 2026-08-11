@@ -1,7 +1,0 @@
-<% content_for :body_class, "pt-form-page" %>
-
-<%= render layout: 'product_tours/shared/dashboard' do %>
-  <div class="breadcrumb"><%= link_to t("product_tours.dashboard.title", default: "Product tours"), posts_path %> / <%= t("product_tours.dashboard.new_post", default: "New product tour") %></div>
-  <h1><%= t("product_tours.dashboard.new_post", default: "New product tour") %></h1>
-  <%= render "form", post: @post %>
-<% end %>

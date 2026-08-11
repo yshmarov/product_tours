@@ -1,0 +1,7 @@
+<% content_for :body_class, "pt-show" %>
+
+<%= render layout: 'product_tours/shared/dashboard' do %>
+  <p class="breadcrumb"><%= link_to t("product_tours.dashboard.title", default: "Product tours"), tours_path %> / <%= @tour.title %></p>
+
+  <%= render "tour_panel", tour: @tour, sidebar_context: false %>
+<% end %>

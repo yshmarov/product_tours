@@ -30,10 +30,10 @@ module ProductTours
       ProductTours.locale(request)
     end
 
-    def find_post_by_locale(scope, key)
+    def find_tour_by_locale(scope, key)
       locales = [current_product_tours_locale, I18n.default_locale.to_s].uniq
-      posts = scope.where(locale: locales, key: key).index_by(&:locale)
-      locales.filter_map { |locale| posts[locale] }.first
+      tours = scope.where(locale: locales, key: key).index_by(&:locale)
+      locales.filter_map { |locale| tours[locale] }.first
     end
 
     def clean_page_url(value)

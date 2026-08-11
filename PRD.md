@@ -1,7 +1,7 @@
 # PRD: product_tours
 
-> Status: **shipped as v0.3.3**. Audited against the implementation on
-> 2026-08-08.
+> Status: **shipped as v1.0.0**. Audited against the implementation on
+> 2026-08-11.
 
 ## Product in one sentence
 
@@ -32,16 +32,17 @@ The host app owns:
 This boundary is the product. It keeps the gem useful without turning it into an
 engagement platform.
 
-## Core decision: tutorials can link; tours are not a model
+## Core decision: tours can link; walkthroughs are not a model
 
-The code-level unit is `ProductTours::Post`. Admin and visitor UI call it a
+The code-level unit is `ProductTours::Tour`. Admin and visitor UI call it a
 **tutorial** or **product tour**.
 
-A Post may point to one other Post in the same locale through
-`action_post_key`. The widget opens that target in place and keeps an in-memory
+A Tour may point to one other Tour in the same locale through
+`action_tour_key`. The widget opens that target in place and keeps an in-memory
 Back stack for the current modal session.
 
-There is no `Course`, `Tour`, `Step`, sequence, ordering, or progress model.
+There is no `Course`, `Walkthrough`, `Step`, sequence, ordering, or progress
+model beyond the linked `Tour` records themselves.
 That means:
 
 - every tutorial remains directly invokable by key
@@ -94,7 +95,7 @@ That means:
 | Metadata | Safe resolver metadata for every provider; oEmbed title/thumbnail for YouTube, Vimeo, Loom |
 | Events | `viewed`, `dismissed`, `completed`, plus unresolved-trigger reporting |
 | i18n | 26 locale files with parity tests and RTL support |
-| Compatibility | Ruby >= 3.2; CI covers Ruby 3.2–3.4 and Rails 7.1–8.1 |
+| Compatibility | Ruby >= 3.2; CI covers Ruby 3.2–4.0 and Rails 7.1–8.1; Rails < 9 |
 
 ## Public integration contract
 
@@ -155,7 +156,7 @@ fixed and safe.
 
 ## Data model
 
-`ProductTours::Post` is stored in `product_tours_posts`:
+`ProductTours::Tour` is stored in `product_tours_tours`:
 
 | Field | Contract |
 | --- | --- |
@@ -167,7 +168,7 @@ fixed and safe.
 | `video_metadata` | Resolver/oEmbed output as JSON |
 | `action_label` | Optional; widget supplies Done/Next when blank |
 | `action_url` | Optional relative path or HTTP(S) URL |
-| `action_post_key` | Optional existing same-locale Post key |
+| `action_tour_key` | Optional existing same-locale Tour key |
 
 Database constraints/indexes:
 
@@ -179,7 +180,7 @@ Optional framework-backed content:
 - `has_rich_text :description` when Action Text and its table exist
 - `has_one_attached :video` when Active Storage and its tables exist
 
-A primary action may have one destination: URL, linked Post, or neither
+A primary action may have one destination: URL, linked Tour, or neither
 (finish/close). Self-links, missing links, cross-locale links, unsafe URLs, and
 unsupported videos are invalid.
 
@@ -207,13 +208,13 @@ Admin behavior:
 
 ## Linked navigation
 
-When `action_post_key` is present:
+When `action_tour_key` is present:
 
 - the action label defaults to Next
 - the public widget resolves the target in the current tutorial's locale
-- the current Post is pushed onto the in-memory history stack
+- the current Tour is pushed onto the in-memory history stack
 - the modal content is replaced without a page load
-- Back pops and renders the previous Post
+- Back pops and renders the previous Tour
 - repeated/cyclic navigation is refused client-side
 - missing/draft targets use normal unresolved-trigger handling
 
@@ -264,7 +265,7 @@ Index:
 - exact-key suggestions plus partial key search
 - visible Clear action when filtered
 - 50 records per page
-- selected Post keeps sidebar filters/page context
+- selected Tour keeps sidebar filters/page context
 - opening a translation from the detail keeps that same context
 
 Form:
@@ -302,12 +303,18 @@ Signals:
 Payload keys:
 
 ```ruby
-post_id
+tour_id
 key
 locale
 page_url # query string and fragment removed
 source
 ```
+
+Stable source values:
+
+- viewed: `modal`, `linked_tour`, `back`
+- completed: `action`, `linked_tour`
+- dismissed: `modal`
 
 Video playback does not mean completion. The host may subscribe with Ahoy or
 another analytics system and attach its own identity/account context.
@@ -400,7 +407,7 @@ Sibling gems own those adjacent jobs where appropriate: `testimonials`,
 
 The current release is accepted when all of the following remain true:
 
-- fresh generated install boots on Rails 7.1+
+- fresh generated install boots on Rails 7.1 through 8.1
 - demo migration/task behavior is idempotent
 - admin is development-only by default
 - public triggers open only published current/default-locale content
@@ -413,7 +420,7 @@ The current release is accepted when all of the following remain true:
 - tests cover generators, model validation, resolver safety, dashboard CRUD,
   translations, widget resolution, lifecycle events, Turbo, and CSP
 - a real browser test covers linked Next, Back, and finish behavior
-- CI passes Ruby 3.2/3.3/3.4 across Rails 7.1/7.2/8.0/8.1
+- CI passes Ruby 3.2/3.3/3.4/4.0 across Rails 7.1/7.2/8.0/8.1
 
 Changes that violate the boundary above require an explicit product decision,
 not incidental implementation drift.

@@ -1,0 +1,7 @@
+<% content_for :body_class, "pt-form-page" %>
+
+<%= render layout: 'product_tours/shared/dashboard' do %>
+  <div class="breadcrumb"><%= link_to t("product_tours.dashboard.title", default: "Product tours"), tours_path %> / <%= link_to @tour.title, tour_path(@tour) %> / <%= t("product_tours.dashboard.edit", default: "Edit") %></div>
+  <h1><%= t("product_tours.dashboard.edit_tour", default: "Edit tutorial") %></h1>
+  <%= render "form", tour: @tour %>
+<% end %>

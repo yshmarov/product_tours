@@ -51,7 +51,7 @@ small set of working tutorials so you can try the modal immediately.
 > The dashboard defaults to **development only**. Set `authorize_admin` before
 > deploying it — see [Configure](#configure).
 
-Ruby >= 3.2 · Rails >= 7.1 · Active Storage only for uploaded videos · Action
+Ruby >= 3.2 · Rails >= 7.1 and < 9 · Active Storage only for uploaded videos · Action
 Text only for rich descriptions.
 
 Installing with a coding agent? Point it at [AGENTS.md](AGENTS.md) — the same
@@ -213,7 +213,7 @@ key. Running the task again updates those records instead of duplicating them.
   <button type="button" data-product-tour="demo_direct_video">Open the direct video tutorial</button>
   <button type="button" data-product-tour="demo_getting_started">Open the getting started guide</button>
   <button type="button" data-product-tour="demo_draft">Try an unpublished tutorial</button>
-  <button type="button" data-product-tour="demo_missing_post">Try a missing tutorial</button>
+  <button type="button" data-product-tour="demo_missing_tour">Try a missing tutorial</button>
 </div>
 <%= product_tours_tag %>
 ```
@@ -296,7 +296,10 @@ table. It emits three Rails notifications:
 | `product_tours.dismissed` | The visitor closed it before using the primary action |
 | `product_tours.completed` | The visitor used the primary action |
 
-Payload: `post_id`, `key`, `locale`, query-free `page_url`, and `source`.
+Payload: `tour_id`, `key`, `locale`, query-free `page_url`, and `source`.
+The `source` vocabulary is also stable: viewed events use `modal`,
+`linked_tour`, or `back`; completed events use `action` or `linked_tour`; and
+dismissed events use `modal`.
 
 Bridge them to Ahoy—or anything else—in your host app:
 
@@ -335,7 +338,50 @@ Invalid, missing, draft, or disabled keys open nothing for the visitor.
 
 No end user gets a Rails error page because somebody renamed a tutorial.
 
+## Compatibility and public API
+
+The following are the model and integration contracts that 1.x will keep
+stable under semantic versioning:
+
+- `ProductTours::Tour`, including `key`, `locale`, `status`, `title`,
+  `video_url`, `video_metadata`, `action_label`, `action_url`,
+  `action_tour_key`, timestamps, `STATUSES`, status methods/scopes,
+  `newest_first`, `action_tour`, `description_supported?`,
+  `video_upload_supported?`, and optional rich-description/video behavior.
+- `ProductTours.configure` and the documented configuration options.
+- `mount_product_tours`, `product_tours_tag`, and `data-product-tour="key"`.
+- The tutorial key grammar and per-locale uniqueness contract.
+- `product_tours.viewed`, `product_tours.dismissed`, and
+  `product_tours.completed`, with `tour_id`, `key`, `locale`, query-free
+  `page_url`, and the documented `source` values.
+- `config.on_event(name, payload, request)` and
+  `product_tours.unresolved_trigger`, whose payload has `key`, `locale`,
+  query-free `page_url`, and one of `invalid_key`, `missing`, `unpublished`, or
+  `disabled` as its `reason`.
+
+Dashboard controllers, view partials, CSS classes, generated HTML, and widget
+implementation objects are private. Incompatible changes to the public list
+above wait for a new major version; a deprecation normally ships first.
+
+### Upgrading from 0.3.x
+
+Version 1.0.0 is the deliberate terminology break from the pre-1.0 API.
+Existing installs must rename their generated table and linked-step column:
+
+```ruby
+rename_table :product_tours_posts, :product_tours_tours
+rename_column :product_tours_tours, :action_post_key, :action_tour_key
+```
+
+Replace `ProductTours::Post` with `ProductTours::Tour`, `post_id` event payloads
+with `tour_id`, and any dashboard links under `/product_tours/posts` with
+`/product_tours/tours`. Fresh installs already generate the new schema.
+
 ## Security
+
+See [SECURITY.md](https://github.com/yshmarov/product_tours/blob/main/SECURITY.md)
+for supported versions, private vulnerability reporting, the stored-data and
+lifecycle-event boundary, and deletion/retention guidance.
 
 - Admin authorization runs server-side on every dashboard request.
 - Public resolution returns only published tutorials allowed by `enabled`.
@@ -346,6 +392,11 @@ No end user gets a Rails error page because somebody renamed a tutorial.
   `frame-src` without replacing the host policy.
 - For direct videos on another origin, allow that origin in the host app's
   `media-src` policy.
+- Uploaded videos stream from the gated engine route with byte-range support and
+  private, non-stored responses; no reusable signed blob URL is exposed.
+- The host owns retention and deletion. Remove a row with
+  `ProductTours::Tour.find(id).destroy!`, then apply object-store, backup,
+  analytics, cache, and export retention policies separately.
 
 ## What it doesn't do
 
@@ -365,9 +416,10 @@ bundle exec rubocop
 ```
 
 The normal suite covers the Rails engine contract. The system task drives the
-real widget through Next, Back, and finish in headless Chrome. CI runs Rails 7.1
-/ 7.2 / 8.0 / 8.1 against Ruby 3.2 / 3.3 / 3.4, plus that browser test once on
-the current bundle.
+real widget through Next, Back, and finish in headless Chrome. CI runs Rails
+7.1, 7.2, 8.0, and 8.1 against Ruby 3.2 through 4.0, plus that browser test once
+on Ruby 4.0. Rails 9 is outside the 1.x dependency contract until it passes the
+suite.
 
 Bug reports and pull requests are welcome. The most useful report is a real
 Rails app and the exact point where installation or authoring felt confusing.

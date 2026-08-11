@@ -12,7 +12,7 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'nonce="testnonce"'
     assert_includes response.body, 'data-product-tour="demo_walkthrough_start"'
     assert_includes response.body, 'data-product-tour="demo_draft"'
-    assert_includes response.body, 'data-product-tour="demo_missing_post"'
+    assert_includes response.body, 'data-product-tour="demo_missing_tour"'
     refute_includes response.body, 'data-product-tour="demo_walkthrough_features"'
     ProductTours::ContentSecurityPolicy::FRAME_SOURCES.each do |source|
       assert_includes response.headers.fetch('Content-Security-Policy'), source
@@ -49,11 +49,11 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_equal 'text/css', response.media_type
   end
 
-  test 'resolves a current-locale published post' do
-    create_post(description: 'Configure a plan', action_label: 'Open billing', action_url: '/billing',
+  test 'resolves a current-locale published tour' do
+    create_tour(description: 'Configure a plan', action_label: 'Open billing', action_url: '/billing',
                 video_url: 'https://vimeo.com/76979871')
 
-    get '/product_tours/widget/post', params: { key: 'billing_setup', page_url: 'https://app.test/settings?token=secret' }
+    get '/product_tours/widget/tour', params: { key: 'billing_setup', page_url: 'https://app.test/settings?token=secret' }
 
     assert_response :ok
     payload = response.parsed_body
@@ -63,15 +63,15 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_equal '/billing', payload.dig('action', 'url')
   end
 
-  test 'resolves linked posts with a useful default action label' do
-    create_post(key: 'next_step', title: 'Next step')
-    create_post(action_post_key: 'next_step')
+  test 'resolves linked tours with a useful default action label' do
+    create_tour(key: 'next_step', title: 'Next step')
+    create_tour(action_tour_key: 'next_step')
 
-    get '/product_tours/widget/post', params: { key: 'billing_setup' }
+    get '/product_tours/widget/tour', params: { key: 'billing_setup' }
 
     assert_response :ok
     payload = response.parsed_body
-    assert_equal 'next_step', payload.dig('action', 'postKey')
+    assert_equal 'next_step', payload.dig('action', 'tourKey')
     assert_equal 'Next', payload.dig('action', 'label')
     assert_nil payload.dig('action', 'url')
   end
@@ -92,12 +92,12 @@ class WidgetTest < ActionDispatch::IntegrationTest
       events << args.last
     end
 
-    get '/product_tours/widget/post', params: { key: 'demo_draft', page_url: 'https://app.test/path?secret=1' }
+    get '/product_tours/widget/tour', params: { key: 'demo_draft', page_url: 'https://app.test/path?secret=1' }
     assert_response :not_found
     assert_equal 'unpublished', events.last[:reason]
     assert_equal 'https://app.test/path', events.last[:page_url]
 
-    get '/product_tours/widget/post', params: { key: 'demo_missing_post' }
+    get '/product_tours/widget/tour', params: { key: 'demo_missing_tour' }
     assert_response :not_found
     assert_equal 'missing', events.last[:reason]
     assert_equal 2, reports.size
@@ -111,12 +111,12 @@ class WidgetTest < ActionDispatch::IntegrationTest
 
   test 'raises unresolved triggers by default in test' do
     assert_raises(ProductTours::UnresolvedTriggerError) do
-      get '/product_tours/widget/post', params: { key: 'Bad key' }
+      get '/product_tours/widget/tour', params: { key: 'Bad key' }
     end
   end
 
   test 'emits minimal lifecycle signals for host-owned analytics' do
-    create_post
+    create_tour
     payloads = []
     subscriber = ActiveSupport::Notifications.subscribe('product_tours.completed') do |*args|
       payloads << args.last
@@ -144,7 +144,7 @@ class WidgetTest < ActionDispatch::IntegrationTest
   end
 
   test 'passes lifecycle signals and the raw request to the host hook' do
-    create_post
+    create_tour
     calls = []
     ProductTours.config.on_event = lambda do |name, payload, request|
       calls << [name, payload, request]
@@ -168,7 +168,7 @@ class WidgetTest < ActionDispatch::IntegrationTest
   end
 
   test 'does not let a raising host event hook break the visitor flow' do
-    create_post
+    create_tour
     called = false
     ProductTours.config.on_event = lambda do |_name, _payload, _request|
       called = true
@@ -184,7 +184,7 @@ class WidgetTest < ActionDispatch::IntegrationTest
   end
 
   test 'does not create a tracking cookie' do
-    create_post
+    create_tour
     post '/product_tours/widget/signal', params: { key: 'billing_setup', event_action: 'viewed', source: 'modal' }
 
     assert_response :no_content
@@ -192,26 +192,26 @@ class WidgetTest < ActionDispatch::IntegrationTest
   end
 
   test 'resolves the requested locale and falls back to the default locale when missing' do
-    create_post(title: 'English billing')
+    create_tour(title: 'English billing')
 
-    get '/product_tours/widget/post', params: { key: 'billing_setup', locale: 'fr' }
+    get '/product_tours/widget/tour', params: { key: 'billing_setup', locale: 'fr' }
     assert_response :ok
     assert_equal 'English billing', response.parsed_body['title']
     assert_equal 'en', response.parsed_body['locale']
 
-    create_post(locale: 'fr', title: 'Facturation')
-    get '/product_tours/widget/post', params: { key: 'billing_setup', locale: 'fr' }
+    create_tour(locale: 'fr', title: 'Facturation')
+    get '/product_tours/widget/tour', params: { key: 'billing_setup', locale: 'fr' }
     assert_response :ok
     assert_equal 'Facturation', response.parsed_body['title']
     assert_equal 'fr', response.parsed_body['locale']
   end
 
   test 'does not bypass a draft translation with a published default-locale tutorial' do
-    create_post(title: 'English billing')
-    create_post(locale: 'fr', title: 'Facturation', status: 'draft')
+    create_tour(title: 'English billing')
+    create_tour(locale: 'fr', title: 'Facturation', status: 'draft')
 
     error = assert_raises(ProductTours::UnresolvedTriggerError) do
-      get '/product_tours/widget/post', params: { key: 'billing_setup', locale: 'fr' }
+      get '/product_tours/widget/tour', params: { key: 'billing_setup', locale: 'fr' }
     end
 
     assert_equal 'unpublished', error.payload[:reason]
@@ -225,13 +225,17 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_equal 'Back', JSON.parse(config).dig('labels', 'back')
 
     get '/product_tours/widget.js'
-    assert_includes response.body, 'history.push(post)'
+    assert_includes response.body, 'history.push(tour)'
     assert_includes response.body, 'link would create a navigation cycle'
     assert_includes response.body, 'element("button", "pt-back"'
+    assert_includes response.body, 'complete("linked_tour")'
+    assert_includes response.body, 'renderTour(history.pop(), "back")'
+    assert_includes response.body, 'sendSignal("viewed", source || "modal")'
+    assert_includes response.body, 'sendSignal("dismissed", "modal")'
     refute_includes response.body, '"\\u2039 " + config.labels.back'
     assert_includes response.body, 'showFirstVideoFrame(player)'
-    assert_includes response.body, 'fetchPost(key, config.locale)'
-    assert_includes response.body, 'fetchPost(nextKey, post.locale)'
+    assert_includes response.body, 'fetchTour(key, config.locale)'
+    assert_includes response.body, 'fetchTour(nextKey, tour.locale)'
     assert_includes response.body, 'locale: session.locale'
     refute_includes response.body, 'video_ended'
     refute_includes response.body, 'next_key'

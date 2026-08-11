@@ -2,11 +2,39 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-11
+
+- **The record is a tour, all the way down.** `ProductTours::Post` is now
+  `ProductTours::Tour`; fresh installs create `product_tours_tours`, linked
+  steps use `action_tour_key`, lifecycle payloads use `tour_id`, the widget
+  resolves `/widget/tour`, and dashboard resources live under `/tours`. There
+  is deliberately no `Post` compatibility alias: v1 is the point where the
+  public vocabulary becomes honest and then freezes under semantic versioning.
+- Existing 0.3.x installs must rename the `product_tours_posts` table to
+  `product_tours_tours` and its `action_post_key` column to `action_tour_key`
+  before booting 1.0.0. Host code must replace `ProductTours::Post`, old
+  dashboard paths, and the old `post_id` lifecycle payload key. Fresh installs
+  need no upgrade migration.
 - Added one headless-Chrome system test that opens a linked walkthrough, moves
   Next and Back, and finishes it. Capybara and Selenium are development/test
   dependencies only; the runtime gem API and dependency surface are unchanged.
 - Refreshed the PRD's shipped version, database-index contract, acceptance
   wording, compatibility wording, and the missing release comparison links.
+- **Uploaded videos now stay behind the engine gate.** The media controller
+  streams full and byte-range responses directly after authorization instead of
+  redirecting to a reusable signed Active Storage blob URL. Hosts gain the
+  privacy promised by the existing docs without losing playback or seeking.
+- **Hosts that load Action View from an initializer boot normally.**
+  `WidgetHelper` is required from `lib` before the engine registers its Action
+  View hook; a dummy-host initializer reproduces that early load on every test
+  boot. `product_tours_tag` is unchanged.
+- The documented model, configuration, route/helper, key, event, and callback
+  surface is now the stable 1.x API. Added a security policy with explicit
+  content, event, deletion, and retention boundaries.
+- Supported combinations are Ruby 3.2 through 4.0 and Rails 7.1 through 8.1.
+  Rails now has a `< 9` upper bound. Release validation builds the gem, verifies
+  RubyGems indexing, and creates the GitHub Release. Generator tests write only
+  under ignored root `tmp/`, so tests cannot contaminate later lint runs.
 
 ## [0.3.3] - 2026-08-08
 
@@ -172,7 +200,8 @@
 - Removed generic tutorial duplication now that translations provide the only
   intentional content-copying workflow.
 
-[Unreleased]: https://github.com/yshmarov/product_tours/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/yshmarov/product_tours/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/yshmarov/product_tours/compare/v0.3.3...v1.0.0
 [0.3.3]: https://github.com/yshmarov/product_tours/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/yshmarov/product_tours/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/yshmarov/product_tours/compare/v0.3.0...v0.3.1

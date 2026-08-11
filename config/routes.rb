@@ -6,8 +6,8 @@ ProductTours::Engine.routes.draw do
   get 'dashboard.css', to: 'widgets#dashboard_stylesheet', as: :dashboard_stylesheet
 
   scope :widget, as: :widget do
-    get :post, to: 'tours#resolve'
-    post :signal, to: 'tours#signal'
+    get :tour, to: 'interactions#resolve'
+    post :signal, to: 'interactions#signal'
   end
 
   # No `id: /\d+/` constraint: it made this route bigint-only, which forced the
@@ -16,12 +16,12 @@ ProductTours::Engine.routes.draw do
   # fixed-name route above is declared first, so ordering already disambiguates.
   get 'media/:id', to: 'media#show', as: :media
 
-  resources :posts do
+  resources :tours do
     post :refresh_video_metadata, on: :member
     post :add_translation, on: :member
     patch :publish, on: :member
     patch :unpublish, on: :member
     get :video_preview, on: :collection
   end
-  root to: 'posts#index'
+  root to: 'tours#index'
 end

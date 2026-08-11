@@ -5,7 +5,7 @@ Instructions for coding agents. Two audiences:
 - **[Installing product_tours into a Rails app](#installing-into-a-rails-app)** — you are working in a host app and were asked to add product tours, onboarding guides, or video tutorials.
 - **[Working on the gem itself](#working-on-the-gem-itself)** — you are working in this repository.
 
-Requirements: Ruby >= 3.2, Rails >= 7.1. Active Storage only for uploaded videos, Action Text only for rich descriptions — both optional and both degrade rather than raise.
+Requirements: Ruby >= 3.2, Rails >= 7.1 and < 9. Active Storage only for uploaded videos, Action Text only for rich descriptions — both optional and both degrade rather than raise.
 
 If you are in a host app and this file is not in front of you, it ships inside the gem: `cat "$(bundle show product_tours)/AGENTS.md"`.
 
@@ -21,7 +21,7 @@ bin/rails generate product_tours:install
 bin/rails db:migrate
 ```
 
-The generator writes `config/initializers/product_tours.rb`, one migration (`product_tours_posts`), and `mount_product_tours at: "/product_tours"` into `config/routes.rb`. **In development the migration also inserts working demo tutorials**, so the modal has something to open before anyone has written content. Read the initializer it wrote — it is the source of truth over any summary of it, including this file.
+The generator writes `config/initializers/product_tours.rb`, one migration (`product_tours_tours`), and `mount_product_tours at: "/product_tours"` into `config/routes.rb`. **In development the migration also inserts working demo tutorials**, so the modal has something to open before anyone has written content. Read the initializer it wrote — it is the source of truth over any summary of it, including this file.
 
 ### 2. Wire the three things the generator cannot
 
@@ -69,7 +69,7 @@ Then in the running app: open `/product_tours`, confirm the demo tutorials are l
 
 ### Tutorials are content, not code
 
-A tutorial is a row in `product_tours_posts`, written and published in the mounted dashboard. **Do not create tutorials from host-app migrations, seeds, or fixtures** — that is not how this gem is meant to be used, and it puts editorial content in schema history. If the app needs sample content, `bin/rails product_tours:seed_demo` is the supported path.
+A tutorial is a row in `product_tours_tours`, written and published in the mounted dashboard. **Do not create tutorials from host-app migrations, seeds, or fixtures** — that is not how this gem is meant to be used, and it puts editorial content in schema history. If the app needs sample content, `bin/rails product_tours:seed_demo` is the supported path.
 
 What a tutorial carries: a `key`, a title, an optional rich description, an optional video, and at most one primary action (a URL, or the key of the next tutorial — that link is what makes a walkthrough). Keys must match `/\A[a-z0-9]+(?:[._-][a-z0-9]+)*\z/` — lowercase, digits, and `. _ -` as separators. `Billing Setup` and `billingSetup` are invalid; `billing_setup` and `billing.step-1` are fine. `status` is `draft` or `published`, and the key is unique **per locale**, which is how translations work: one row per language for the same key, with locale fallback at resolve time.
 
@@ -112,7 +112,7 @@ exceptions without breaking the visitor flow. Keep it fast or enqueue a job.
 - **Do not create or edit tutorials in code** (see above).
 - **Do not add provider hosts to `frame-src` by hand** — the engine already does it.
 - **Do not serve uploaded videos by blob URL** — the gated media route exists so a leaked signed URL cannot hand over your content.
-- **Do not install Active Storage or Action Text "to make it work"** unless the app actually wants uploads or rich text. Both are optional; the gem checks for them (`Post.video_upload_supported?`, `Post.description_supported?`) and simply offers less.
+- **Do not install Active Storage or Action Text "to make it work"** unless the app actually wants uploads or rich text. Both are optional; the gem checks for them (`Tour.video_upload_supported?`, `Tour.description_supported?`) and simply offers less.
 
 ### Configuration
 
@@ -164,7 +164,7 @@ bundle exec rubocop              # must be clean
 BUNDLE_GEMFILE=gemfiles/rails_7.1.gemfile bundle exec rake test   # 7.1, 7.2, 8.0, 8.1 in gemfiles/
 ```
 
-Layout: `app/` controllers, `Post`, dashboard views · `lib/product_tours/` config, widget JS, seeds, engine, CSP patch · `lib/generators/product_tours/install/` the one generator · `config/locales/` 26 locales · `test/` minitest with `test/dummy` as the host app.
+Layout: `app/` controllers, `Tour`, dashboard views · `lib/product_tours/` config, widget JS, seeds, engine, CSP patch · `lib/generators/product_tours/install/` the one generator · `config/locales/` 26 locales · `test/` minitest with `test/dummy` as the host app.
 
 Conventions this codebase holds to — follow them rather than the first thing that works:
 

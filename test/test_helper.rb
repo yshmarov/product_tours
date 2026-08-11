@@ -8,7 +8,7 @@ require 'rack/test'
 
 ActiveRecord::Schema.verbose = false
 ActiveRecord::Schema.define do
-  create_table :product_tours_posts, force: true do |t|
+  create_table :product_tours_tours, force: true do |t|
     t.string :key, null: false
     t.string :locale, null: false
     t.string :status, null: false, default: 'draft'
@@ -17,11 +17,11 @@ ActiveRecord::Schema.define do
     t.json :video_metadata, null: false, default: {}
     t.string :action_label
     t.text :action_url
-    t.string :action_post_key
+    t.string :action_tour_key
     t.timestamps
   end
-  add_index :product_tours_posts, %i[locale key], unique: true
-  add_index :product_tours_posts, :status
+  add_index :product_tours_tours, %i[locale key], unique: true
+  add_index :product_tours_tours, :status
 
   create_table :active_storage_blobs, force: true do |t|
     t.string :key, null: false
@@ -83,9 +83,9 @@ module ActiveSupport
       ProductTours.config.authorize_admin = ->(_request) { true }
     end
 
-    def create_post(**attributes)
+    def create_tour(**attributes)
       defaults = { key: 'billing_setup', locale: 'en', title: 'Set up billing', status: 'published' }
-      ProductTours::Post.create!(defaults.merge(attributes))
+      ProductTours::Tour.create!(defaults.merge(attributes))
     end
 
     def fake_video(name: 'tutorial.webm', content: 'fake video bytes', type: 'video/webm')

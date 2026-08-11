@@ -7,6 +7,7 @@ require 'product_tours/video_resolver'
 require 'product_tours/video_metadata'
 require 'product_tours/content_security_policy'
 require 'product_tours/widget'
+require 'product_tours/widget_helper'
 require 'product_tours/seeds'
 require 'product_tours/engine'
 

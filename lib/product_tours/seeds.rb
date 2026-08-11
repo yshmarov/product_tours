@@ -9,7 +9,7 @@ module ProductTours
         key: 'demo_walkthrough_finish',
         title: 'You completed the Product Tours tour',
         description: '<p>Completing this step emits <code>product_tours.completed</code>. ' \
-                     'Replace these demo posts with one short guide tied to a real customer success moment.</p>',
+                     'Replace these demo tours with one short guide tied to a real customer success moment.</p>',
         action_label: 'Finish tour'
       },
       {
@@ -18,7 +18,7 @@ module ProductTours
         description: '<p>This placeholder uses a direct MP4. You can also attach a video with Active Storage; ' \
                      'uploaded media streams through the engine rather than a public blob URL.</p>',
         video_url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-        action_post_key: 'demo_walkthrough_finish'
+        action_tour_key: 'demo_walkthrough_finish'
       },
       {
         key: 'demo_voomly',
@@ -26,7 +26,7 @@ module ProductTours
         description: '<p>Subscribe to viewed, dismissed, completed, and unresolved-trigger notifications, ' \
                      'or use <code>config.on_event</code> when you need the raw request to resolve a user.</p>',
         video_url: 'https://share.voomly.com/v/CxfDyNYKE0SBEBV-zVAUHo8rNwS2eLBr418z81gd6GlkKlLfJ',
-        action_post_key: 'demo_direct_video'
+        action_tour_key: 'demo_direct_video'
       },
       {
         key: 'demo_tella',
@@ -34,23 +34,23 @@ module ProductTours
         description: '<p>A tutorial keeps the same key in every locale. Product Tours resolves the visitor locale ' \
                      'and falls back to your default locale, so triggers never need translated keys.</p>',
         video_url: 'https://www.tella.tv/video/add-your-logo-to-videos-39y0',
-        action_post_key: 'demo_voomly'
+        action_tour_key: 'demo_voomly'
       },
       {
         key: 'demo_loom',
         title: 'Draft safely, then publish',
-        description: '<p>The seeded <code>demo_draft</code> post appears in the dashboard but cannot open for ' \
+        description: '<p>The seeded <code>demo_draft</code> tour appears in the dashboard but cannot open for ' \
                      'visitors. Use drafts to review copy, actions, and video before a trigger goes live.</p>',
         video_url: 'https://www.loom.com/share/e5b8c04bca094dd8a5507925ab887002',
-        action_post_key: 'demo_tella'
+        action_tour_key: 'demo_tella'
       },
       {
         key: 'demo_vimeo',
         title: 'Chain focused steps',
-        description: '<p>This Next button follows <code>action_post_key</code>. Each step is an ordinary tutorial, ' \
+        description: '<p>This Next button follows <code>action_tour_key</code>. Each step is an ordinary tutorial, ' \
                      'so you can reuse it alone or connect it into a walkthrough without host-side JavaScript.</p>',
         video_url: 'https://vimeo.com/76979871',
-        action_post_key: 'demo_loom'
+        action_tour_key: 'demo_loom'
       },
       {
         key: 'demo_youtube',
@@ -58,21 +58,21 @@ module ProductTours
         description: '<p>This generic YouTube clip is only a provider example. Replace it with your own explanation, ' \
                      'or leave video blank for a fast text-only guide.</p>',
         video_url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE',
-        action_post_key: 'demo_vimeo'
+        action_tour_key: 'demo_vimeo'
       },
       {
         key: 'demo_walkthrough_features',
         title: 'Trigger a tour from your own UI',
         description: '<p>Add <code>data-product-tour="demo_walkthrough_start"</code> to any button or link. ' \
                      'The single <code>product_tours_tag</code> in your layout handles every trigger on the page.</p>',
-        action_post_key: 'demo_youtube'
+        action_tour_key: 'demo_youtube'
       },
       {
         key: 'demo_walkthrough_start',
         title: 'Welcome to Product Tours',
         description: '<p>This is a real multi-step tour created by <code>product_tours:seed_demo</code>. ' \
                      'Continue to learn the public API by using the same experience your customers will see.</p>',
-        action_post_key: 'demo_walkthrough_features'
+        action_tour_key: 'demo_walkthrough_features'
       },
       {
         key: 'demo_getting_started',
@@ -85,7 +85,7 @@ module ProductTours
       {
         key: 'demo_draft',
         title: 'This draft stays invisible to visitors',
-        description: '<p>You can edit and preview this post in the dashboard, but its demo trigger will not resolve ' \
+        description: '<p>You can edit and preview this tour in the dashboard, but its demo trigger will not resolve ' \
                      'until you publish it.</p>',
         status: 'draft'
       }
@@ -101,7 +101,7 @@ module ProductTours
       ['demo_direct_video', 'Preview a direct MP4 step'],
       ['demo_getting_started', 'Try a tour that opens a product page'],
       ['demo_draft', 'Confirm that draft tours stay hidden'],
-      ['demo_missing_post', 'Confirm that missing keys are instrumented']
+      ['demo_missing_tour', 'Confirm that missing keys are instrumented']
     ].freeze
 
     TRANSLATIONS = {
@@ -129,12 +129,12 @@ module ProductTours
         },
         'demo_vimeo' => {
           title: 'Enchaînez des étapes ciblées',
-          description: '<p>Le bouton Suivant utilise <code>action_post_key</code>. Reliez des guides sans écrire ' \
+          description: '<p>Le bouton Suivant utilise <code>action_tour_key</code>. Reliez des guides sans écrire ' \
                        'de JavaScript dans votre application.</p>'
         },
         'demo_loom' => {
           title: 'Préparez en brouillon, puis publiez',
-          description: '<p>Le post <code>demo_draft</code> est visible dans le tableau de bord, mais pas pour les ' \
+          description: '<p>Le tour <code>demo_draft</code> est visible dans le tableau de bord, mais pas pour les ' \
                        'visiteurs. Vérifiez le contenu avant de publier.</p>'
         },
         'demo_tella' => {
@@ -188,7 +188,7 @@ module ProductTours
         },
         'demo_vimeo' => {
           title: 'Свържете кратки, фокусирани стъпки',
-          description: '<p>Бутонът Напред използва <code>action_post_key</code>. Свързвайте уроци без JavaScript ' \
+          description: '<p>Бутонът Напред използва <code>action_tour_key</code>. Свързвайте уроци без JavaScript ' \
                        'в приложението домакин.</p>'
         },
         'demo_loom' => {
@@ -230,13 +230,13 @@ module ProductTours
         locale = locale.to_s
         key = attributes.fetch(:key)
         localized = TRANSLATIONS.fetch(locale, {}).fetch(key, {})
-        post = ProductTours::Post.find_or_initialize_by(locale: locale, key: key)
+        tour = ProductTours::Tour.find_or_initialize_by(locale: locale, key: key)
         seed_attributes = attributes.merge(localized).merge(status: attributes.fetch(:status, status))
         description = seed_attributes.delete(:description)
-        post.assign_attributes(seed_attributes)
-        post.description = description if ProductTours::Post.description_supported?
-        post.save!
-        post
+        tour.assign_attributes(seed_attributes)
+        tour.description = description if ProductTours::Tour.description_supported?
+        tour.save!
+        tour
       end
     end
 
@@ -247,7 +247,7 @@ module ProductTours
     def self.load_for_install!(environment: defined?(Rails) && Rails.env)
       return [] unless environment&.development?
 
-      ProductTours::Post.reset_column_information
+      ProductTours::Tour.reset_column_information
       load!
     end
 

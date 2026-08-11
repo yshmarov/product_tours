@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ProductTours
-  module PostsHelper
+  module ToursHelper
     LOCALE_NAMES = {
       'ar' => 'Arabic', 'bg' => 'Bulgarian', 'bn' => 'Bengali', 'de' => 'German', 'el' => 'Greek',
       'en' => 'English', 'es' => 'Spanish', 'fr' => 'French', 'hi' => 'Hindi', 'hr' => 'Croatian',

@@ -3,7 +3,7 @@
 require 'uri'
 
 module ProductTours
-  class Post < ApplicationRecord
+  class Tour < ApplicationRecord
     KEY_FORMAT = /\A[a-z0-9]+(?:[._-][a-z0-9]+)*\z/
     STATUSES = %w[draft published].freeze
     DASHBOARD_STATUSES = %w[published draft].freeze
@@ -19,7 +19,7 @@ module ProductTours
     validates :status, inclusion: { in: STATUSES }
     validates :title, presence: true
     validate :action_has_one_destination
-    validate :action_post_is_linkable
+    validate :action_tour_is_linkable
     validate :action_url_is_safe
     validate :video_url_is_supported
     validate :uploaded_file_is_video
@@ -61,10 +61,10 @@ module ProductTours
       }.compact
     end
 
-    def action_post
-      return if action_post_key.blank?
+    def action_tour
+      return if action_tour_key.blank?
 
-      self.class.find_by(locale: locale, key: action_post_key)
+      self.class.find_by(locale: locale, key: action_tour_key)
     end
 
     private
@@ -97,25 +97,25 @@ module ProductTours
     end
 
     def action_has_one_destination
-      return unless action_url.present? && action_post_key.present?
+      return unless action_url.present? && action_tour_key.present?
 
-      errors.add(:base, 'Primary action can open a URL or another post, not both')
+      errors.add(:base, 'Primary action can open a URL or another tour, not both')
     end
 
-    def action_post_is_linkable
-      return if action_post_key.blank?
+    def action_tour_is_linkable
+      return if action_tour_key.blank?
 
-      unless action_post_key.match?(KEY_FORMAT)
-        errors.add(:action_post_key, 'must use a valid post key')
+      unless action_tour_key.match?(KEY_FORMAT)
+        errors.add(:action_tour_key, 'must use a valid tour key')
         return
       end
-      if action_post_key == key
-        errors.add(:action_post_key, 'cannot link to the same post')
+      if action_tour_key == key
+        errors.add(:action_tour_key, 'cannot link to the same tour')
         return
       end
-      return if locale.blank? || self.class.exists?(locale: locale, key: action_post_key)
+      return if locale.blank? || self.class.exists?(locale: locale, key: action_tour_key)
 
-      errors.add(:action_post_key, 'must identify an existing post in the same locale')
+      errors.add(:action_tour_key, 'must identify an existing tour in the same locale')
     end
 
     def uploaded_file_is_video

@@ -4,12 +4,12 @@ require 'test_helper'
 
 class WidgetSystemTest < ApplicationSystemTestCase
   test 'moves forward, back, and finishes a linked walkthrough' do
-    finish = create_post(key: 'browser_finish', title: 'Finish the walkthrough',
+    finish = create_tour(key: 'browser_finish', title: 'Finish the walkthrough',
                          action_label: 'Finish walkthrough')
-    middle = create_post(key: 'browser_middle', title: 'Review the feature',
-                         action_post_key: finish.key)
-    create_post(key: 'demo_walkthrough_start', title: 'Start the walkthrough',
-                action_post_key: middle.key)
+    middle = create_tour(key: 'browser_middle', title: 'Review the feature',
+                         action_tour_key: finish.key)
+    create_tour(key: 'demo_walkthrough_start', title: 'Start the walkthrough',
+                action_tour_key: middle.key)
 
     visit '/sample'
     find('[data-product-tour="demo_walkthrough_start"]').click

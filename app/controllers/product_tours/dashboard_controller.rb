@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ProductTours
-  # Root of the STAFF surface: the post editor and its list.
+  # Root of the STAFF surface: the tour editor and its list.
   #
   # Inherits from `config.base_controller_class` — by default a plain
   # ActionController::Base, which is why `authorize_admin` exists. Point it at

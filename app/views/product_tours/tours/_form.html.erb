@@ -1,14 +1,14 @@
-<%= form_with model: post, class: "post-form" do |form| %>
-  <% action_target = post.action_post_key.present? ? "post" : (post.action_url.present? ? "url" : "close") %>
-  <% linkable_posts = @linkable_posts.map do |candidate|
+<%= form_with model: tour, class: "tour-form" do |form| %>
+  <% action_target = tour.action_tour_key.present? ? "tour" : (tour.action_url.present? ? "url" : "close") %>
+  <% linkable_tours = @linkable_tours.map do |candidate|
        { id: candidate.id, key: candidate.key, locale: candidate.locale, status: candidate.status,
          label: "#{candidate.title} — #{candidate.key} (#{candidate.status})" }
      end %>
-  <% video_source = params[:video_source].presence || (post.uploaded_video? ? "upload" : "url") %>
-  <% if post.errors.any? %>
+  <% video_source = params[:video_source].presence || (tour.uploaded_video? ? "upload" : "url") %>
+  <% if tour.errors.any? %>
     <div class="errors" role="alert">
       <strong><%= t("product_tours.dashboard.fix_errors", default: "Fix the following fields:") %></strong>
-      <ul><% post.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+      <ul><% tour.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
     </div>
   <% end %>
 
@@ -36,7 +36,7 @@
       <%= form.label :locale, t("product_tours.dashboard.language", default: "Language") %>
       <%= form.text_field :locale, disabled: true %>
       <small>
-        <% if post.new_record? %>
+        <% if tour.new_record? %>
           <%= t("product_tours.dashboard.default_language_hint", default: "New tutorials start in your app's default language. Add translations from the tutorial page.") %>
         <% else %>
           <%= t("product_tours.dashboard.language_locked_hint", default: "Add and open other languages from the tutorial page.") %>
@@ -45,11 +45,11 @@
     </div>
     <div class="field">
       <%= form.label :status, t("product_tours.dashboard.publication_status", default: "Publication status") %>
-      <%= form.select :status, ProductTours::Post::STATUSES.map { |status| [status.humanize, status] } %>
+      <%= form.select :status, ProductTours::Tour::STATUSES.map { |status| [status.humanize, status] } %>
     </div>
   </section>
 
-  <% if ProductTours::Post.description_supported? %>
+  <% if ProductTours::Tour.description_supported? %>
     <section class="form-section">
       <h2><%= t("product_tours.dashboard.description", default: "Description") %></h2>
       <div class="rich-editor" data-rich-editor>
@@ -60,18 +60,18 @@
           <button type="button" data-rich-command="insertOrderedList" aria-label="<%= t("product_tours.dashboard.numbered_list", default: "Numbered list") %>">1.</button>
           <button type="button" data-rich-command="createLink" aria-label="<%= t("product_tours.dashboard.link", default: "Link") %>">↗</button>
         </div>
-        <%= form.hidden_field :description, value: post.description.body.to_s, data: { rich_input: true } %>
+        <%= form.hidden_field :description, value: tour.description.body.to_s, data: { rich_input: true } %>
         <div class="rich-content" contenteditable="true" role="textbox" aria-multiline="true"
              aria-label="<%= t("product_tours.dashboard.description", default: "Description") %>"
-             data-rich-content><%= post.description.body.to_s.html_safe %></div>
+             data-rich-content><%= tour.description.body.to_s.html_safe %></div>
       </div>
     </section>
   <% end %>
 
   <section class="form-section">
     <h2><%= t("product_tours.dashboard.video", default: "Video") %></h2>
-    <% if ProductTours::Post.video_upload_supported? %>
-      <fieldset class="video-source-picker" data-video-source-picker data-has-upload="<%= post.uploaded_video? %>">
+    <% if ProductTours::Tour.video_upload_supported? %>
+      <fieldset class="video-source-picker" data-video-source-picker data-has-upload="<%= tour.uploaded_video? %>">
         <legend class="sr-only"><%= t("product_tours.dashboard.video_source", default: "Video source") %></legend>
         <label class="action-choice">
           <%= radio_button_tag :video_source, "url", video_source == "url", data: { video_source: true } %>
@@ -94,7 +94,7 @@
         <small><%= t("product_tours.dashboard.video_hint", default: "YouTube, Vimeo, Loom, Tella, Voomly, or a direct MP4/WebM URL.") %></small>
       </div>
       <div class="form-video-preview" data-video-preview
-           data-endpoint="<%= video_preview_posts_path %>"
+           data-endpoint="<%= video_preview_tours_path %>"
            data-loading="<%= t("product_tours.dashboard.video_loading", default: "Loading preview…") %>"
            data-error="<%= t("product_tours.dashboard.video_preview_failed", default: "This video could not be previewed.") %>"
            hidden>
@@ -103,14 +103,14 @@
       </div>
     </div>
 
-    <% if ProductTours::Post.video_upload_supported? %>
+    <% if ProductTours::Tour.video_upload_supported? %>
       <div data-video-source-fields="upload" <%= "hidden" unless video_source == "upload" %>>
         <div class="field">
           <%= form.label :video, t("product_tours.dashboard.video_file", default: "Video file") %>
           <%= form.file_field :video, accept: "video/*", disabled: video_source != "upload",
-                              required: video_source == "upload" && !post.uploaded_video? %>
-          <% if post.uploaded_video? %>
-            <small><%= t("product_tours.dashboard.current_video", default: "Current file: %{filename}", filename: post.video.filename) %></small>
+                              required: video_source == "upload" && !tour.uploaded_video? %>
+          <% if tour.uploaded_video? %>
+            <small><%= t("product_tours.dashboard.current_video", default: "Current file: %{filename}", filename: tour.video.filename) %></small>
           <% end %>
         </div>
       </div>
@@ -128,9 +128,9 @@
           <small><%= t("product_tours.dashboard.action_finish_hint", default: "Marks this tutorial complete and closes the modal.") %></small></span>
       </label>
       <label class="action-choice">
-        <%= radio_button_tag :action_target, "post", action_target == "post", data: { action_target: true } %>
-        <span><strong><%= t("product_tours.dashboard.action_post", default: "Continue to another tutorial") %></strong>
-          <small><%= t("product_tours.dashboard.action_post_hint", default: "Opens it in the same modal and automatically adds a Back button.") %></small></span>
+        <%= radio_button_tag :action_target, "tour", action_target == "tour", data: { action_target: true } %>
+        <span><strong><%= t("product_tours.dashboard.action_tour", default: "Continue to another tutorial") %></strong>
+          <small><%= t("product_tours.dashboard.action_tour_hint", default: "Opens it in the same modal and automatically adds a Back button.") %></small></span>
       </label>
       <label class="action-choice">
         <%= radio_button_tag :action_target, "url", action_target == "url", data: { action_target: true } %>
@@ -141,21 +141,21 @@
 
     <div class="field">
       <%= form.label :action_label, t("product_tours.dashboard.action_label", default: "Button label") %>
-      <%= form.text_field :action_label, placeholder: action_target == "post" ? t("product_tours.next", default: "Next") : t("product_tours.done", default: "Done"),
+      <%= form.text_field :action_label, placeholder: action_target == "tour" ? t("product_tours.next", default: "Next") : t("product_tours.done", default: "Done"),
                           data: { action_label: true } %>
       <small><%= t("product_tours.dashboard.action_label_hint", default: "Optional. A sensible label is used when left blank.") %></small>
     </div>
 
-    <div data-action-fields="post">
+    <div data-action-fields="tour">
       <div class="field">
-        <%= form.label :action_post_key, t("product_tours.dashboard.next_post", default: "Next tutorial") %>
-        <% same_locale_posts = @linkable_posts.select { |candidate| candidate.locale == post.locale } %>
-        <% post_options = same_locale_posts.map { |candidate| ["#{candidate.title} — #{candidate.key} (#{candidate.status})", candidate.key] } %>
-        <%= form.select :action_post_key, options_for_select(post_options, post.action_post_key),
-                        { include_blank: t("product_tours.dashboard.select_next_post", default: "Select the next tutorial…") },
-                        required: true, data: { action_post_select: true, selected_key: post.action_post_key,
-                                                current_post_id: post.id } %>
-        <small><%= t("product_tours.dashboard.next_post_hint", default: "Tutorials must use the same language. Draft tutorials can be linked while you prepare the sequence.") %></small>
+        <%= form.label :action_tour_key, t("product_tours.dashboard.next_tour", default: "Next tutorial") %>
+        <% same_locale_tours = @linkable_tours.select { |candidate| candidate.locale == tour.locale } %>
+        <% tour_options = same_locale_tours.map { |candidate| ["#{candidate.title} — #{candidate.key} (#{candidate.status})", candidate.key] } %>
+        <%= form.select :action_tour_key, options_for_select(tour_options, tour.action_tour_key),
+                        { include_blank: t("product_tours.dashboard.select_next_tour", default: "Select the next tutorial…") },
+                        required: true, data: { action_tour_select: true, selected_key: tour.action_tour_key,
+                                                current_tour_id: tour.id } %>
+        <small><%= t("product_tours.dashboard.next_tour_hint", default: "Tutorials must use the same language. Draft tutorials can be linked while you prepare the sequence.") %></small>
       </div>
     </div>
 
@@ -166,12 +166,12 @@
         <small><%= t("product_tours.dashboard.action_hint", default: "Use an app path such as /settings or a complete HTTP(S) URL.") %></small>
       </div>
     </div>
-    <script type="application/json" data-action-post-options><%= raw json_escape(linkable_posts.to_json) %></script>
+    <script type="application/json" data-action-tour-options><%= raw json_escape(linkable_tours.to_json) %></script>
   </section>
 
   <div class="form-actions">
-    <%= form.submit(post.persisted? ? t("product_tours.dashboard.save", default: "Save changes") : t("product_tours.dashboard.create", default: "Create tutorial"), class: "button primary") %>
-    <%= link_to t("product_tours.dashboard.cancel", default: "Cancel"), post.persisted? ? post_path(post) : posts_path, class: "button" %>
+    <%= form.submit(tour.persisted? ? t("product_tours.dashboard.save", default: "Save changes") : t("product_tours.dashboard.create", default: "Create tutorial"), class: "button primary") %>
+    <%= link_to t("product_tours.dashboard.cancel", default: "Cancel"), tour.persisted? ? tour_path(tour) : tours_path, class: "button" %>
   </div>
   </div>
 <% end %>
