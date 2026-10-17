@@ -2,6 +2,7 @@
 
 require 'product_tours/version'
 require 'product_tours/configuration'
+require 'product_tours/ractor_support'
 require 'product_tours/errors'
 require 'product_tours/video_resolver'
 require 'product_tours/video_metadata'

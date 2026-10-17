@@ -44,6 +44,48 @@ jobs:
       - name: Run system tests
         run: bundle exec rake test:system
 
+  edge:
+    name: Rails edge (Ruby 4.0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BUNDLE_GEMFILE: gemfiles/rails_edge.gemfile
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+      - name: Run tests against Rails main
+        run: bundle exec rake test
+
+  ractor:
+    name: Rails edge Ractor requests (media ${{ matrix.media }}, text ${{ matrix.text }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - media: "0"
+            text: "0"
+          - media: "1"
+            text: "0"
+          - media: "1"
+            text: "1"
+    env:
+      BUNDLE_GEMFILE: gemfiles/rails_ractor.gemfile
+      RACTOR_MEDIA: ${{ matrix.media }}
+      RACTOR_TEXT: ${{ matrix.text }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+      - name: Run requests in non-main Ractors
+        run: bundle exec rake test:ractor
+
   lint:
     name: RuboCop
     runs-on: ubuntu-latest

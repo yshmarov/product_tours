@@ -4,7 +4,19 @@ require 'rails'
 
 module ProductTours
   class Engine < ::Rails::Engine
+    initializer 'product_tours.ractor_middleware' do |app|
+      app.middleware.insert_before 0, RactorSupport::Middleware
+    end
+
     isolate_namespace ProductTours
+
+    initializer 'product_tours.ractorize', before: 'action_controller.ractorize' do
+      if Rails::Application.method_defined?(:ractorize!)
+        Engine.routes.singleton_class.prepend(RactorSupport::MountedRoutes)
+      end
+
+      ActiveSupport.on_load(:before_ractorize) { ProductTours::RactorSupport.prepare! }
+    end
 
     initializer 'product_tours.helpers' do
       ActiveSupport.on_load(:action_view) do

@@ -5,9 +5,9 @@ require 'json'
 
 module ProductTours
   module Widget
-    SOURCE = File.expand_path('widget.js', __dir__)
-    DASHBOARD_SOURCE = File.expand_path('dashboard.js', __dir__)
-    DASHBOARD_STYLESHEET_SOURCE = File.expand_path('dashboard.css', __dir__)
+    SOURCE = File.expand_path('widget.js', __dir__).freeze
+    DASHBOARD_SOURCE = File.expand_path('dashboard.js', __dir__).freeze
+    DASHBOARD_STYLESHEET_SOURCE = File.expand_path('dashboard.css', __dir__).freeze
     RTL_LANGUAGES = %w[ar arc ckb dv fa ha he ks ku ps sd ug ur yi].freeze
 
     class << self

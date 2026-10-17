@@ -10,6 +10,13 @@ module ProductTours
 
     enum :status, STATUSES.index_by(&:itself), default: :draft
 
+    # Explicit methods work in non-main Ractors; Rails' enum-generated
+    # predicates and bang methods are currently unisolated closures.
+    def draft? = status_for_database == 'draft'
+    def draft! = update!(status: 'draft')
+    def published? = status_for_database == 'published'
+    def published! = update!(status: 'published')
+
     has_rich_text :description if respond_to?(:has_rich_text)
 
     has_one_attached :video, service: ProductTours.config.storage_service if defined?(::ActiveStorage)
