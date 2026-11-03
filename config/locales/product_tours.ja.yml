@@ -6,6 +6,7 @@ ja:
     done: "完了"
     dialog: "製品チュートリアル"
     video: "チュートリアル動画"
+    captions_label: "日本語"
     unavailable: "このチュートリアルは利用できません。"
     dashboard:
       title: "製品ツアー"

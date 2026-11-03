@@ -150,8 +150,15 @@ YouTube, Vimeo, and Loom metadata comes from their oEmbed endpoints. Metadata is
 best-effort: a timeout never prevents you from saving a valid URL. YouTube uses
 `youtube-nocookie.com`; unsupported hosts and lookalike URLs fail closed.
 
-Direct videos seek to an early frame for a useful preview instead of showing an
-empty player.
+Direct and uploaded videos play in the gem's own player, so they can carry a
+**poster** and **captions**: a WebVTT file in the tutorial's language, labeled
+with that language's own name in the player's captions menu. Both take a path in
+your app or an HTTPS URL. Serve the `.vtt` from your app's origin; a file on
+another origin needs CORS, and your `media-src`/`img-src` policy must allow
+whatever origin you use. Without a poster, the player seeks to an early frame
+instead of showing an empty box. Provider embeds keep their own poster and
+captions. A new translation starts without captions, because the source's file
+is in the wrong language.
 
 <details>
 <summary><b>Upload videos or add rich descriptions</b></summary>
@@ -344,10 +351,11 @@ The following are the model and integration contracts that 1.x will keep
 stable under semantic versioning:
 
 - `ProductTours::Tour`, including `key`, `locale`, `status`, `title`,
-  `video_url`, `video_metadata`, `action_label`, `action_url`,
-  `action_tour_key`, timestamps, `STATUSES`, status methods/scopes,
-  `newest_first`, `action_tour`, `description_supported?`,
-  `video_upload_supported?`, and optional rich-description/video behavior.
+  `video_url`, `video_metadata`, `poster_url`, `captions_url`, `action_label`,
+  `action_url`, `action_tour_key`, timestamps, `STATUSES`, status
+  methods/scopes, `newest_first`, `action_tour`, `description_supported?`,
+  `video_upload_supported?`, `poster_supported?`, `captions_supported?`, and
+  optional rich-description/video behavior.
 - `ProductTours.configure` and the documented configuration options.
 - `mount_product_tours`, `product_tours_tag`, and `data-product-tour="key"`.
 - The tutorial key grammar and per-locale uniqueness contract.
@@ -362,6 +370,19 @@ stable under semantic versioning:
 Dashboard controllers, view partials, CSS classes, generated HTML, and widget
 implementation objects are private. Incompatible changes to the public list
 above wait for a new major version; a deprecation normally ships first.
+
+### Upgrading from 1.0 or 1.1
+
+Posters and captions (1.2) need two new columns. Until you add them, the
+dashboard simply does not offer those fields:
+
+```bash
+bin/rails generate product_tours:upgrade
+bin/rails db:migrate
+```
+
+The upgrade migration checks each column before adding it, so it is safe on an
+install that already has them.
 
 ### Upgrading from 0.3.x
 

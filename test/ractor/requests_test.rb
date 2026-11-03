@@ -160,11 +160,15 @@ class RactorRequestsTest < Minitest::Test
   end
 
   def test_tour_resolution_and_lifecycle_callbacks_run_inside_worker_ractors
-    tour = ProductTours::Tour.create!(key: 'ractor-tour', locale: 'en', title: 'Ractor tutorial', status: 'published')
+    tour = ProductTours::Tour.create!(key: 'ractor-tour', locale: 'en', title: 'Ractor tutorial', status: 'published',
+                                      video_url: 'https://cdn.example.test/guide.mp4',
+                                      poster_url: '/guide.webp', captions_url: '/guide.en.vtt')
     tour.update!(description: '<p>Ractor description</p>') if defined?(ActionText)
     status, _, body = request('GET', '/product_tours/widget/tour?key=ractor-tour')
     assert_equal 200, status, body
     assert_equal 'Ractor tutorial', JSON.parse(body).fetch('title')
+    assert_equal({ 'url' => '/guide.en.vtt', 'srclang' => 'en', 'label' => 'English' },
+                 JSON.parse(body).dig('video', 'captions'))
     assert_includes JSON.parse(body).fetch('descriptionHtml'), 'Ractor description' if defined?(ActionText)
     status, _, body = request('POST', '/product_tours/widget/signal',
                               params: { key: 'ractor-tour', event_action: 'completed' },

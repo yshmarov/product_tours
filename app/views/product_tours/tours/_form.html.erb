@@ -115,6 +115,21 @@
         </div>
       </div>
     <% end %>
+
+    <% if ProductTours::Tour.poster_supported? %>
+      <div class="field">
+        <%= form.label :poster_url, t("product_tours.dashboard.poster_url", default: "Poster image URL") %>
+        <%= form.text_field :poster_url, placeholder: "/tutorials/billing-poster.webp" %>
+        <small><%= t("product_tours.dashboard.poster_hint", default: "Shown before playback. For direct and uploaded videos; providers show their own. A path in this app or an HTTPS URL.") %></small>
+      </div>
+    <% end %>
+    <% if ProductTours::Tour.captions_supported? %>
+      <div class="field">
+        <%= form.label :captions_url, t("product_tours.dashboard.captions_url", default: "Captions file URL (WebVTT)") %>
+        <%= form.text_field :captions_url, placeholder: "/tutorials/billing.en.vtt" %>
+        <small><%= t("product_tours.dashboard.captions_hint", default: "Captions in this tutorial's language, for direct and uploaded videos. Serve the .vtt from this app: a file on another origin needs CORS. A new translation starts without captions.") %></small>
+      </div>
+    <% end %>
   </section>
 
   <section class="form-section">

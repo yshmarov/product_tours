@@ -6,6 +6,7 @@ vi:
     done: "Xong"
     dialog: "Hướng dẫn sản phẩm"
     video: "Video hướng dẫn"
+    captions_label: "Tiếng Việt"
     unavailable: "Hướng dẫn này không khả dụng."
     dashboard:
       title: "Chuyến tham quan sản phẩm"

@@ -201,6 +201,25 @@ class DashboardTest < ActionDispatch::IntegrationTest
     assert_select '.filters a.filters-clear', count: 0
   end
 
+  test 'saves a poster and captions, and starts a translation without the captions' do
+    as_admin!
+    post '/product_tours/tours', params: {
+      video_source: 'url', action_target: 'close',
+      tour: { key: 'captioned', title: 'Captioned', video_url: 'https://cdn.example.test/guide.mp4',
+              poster_url: '/guides/poster.webp', captions_url: '/guides/guide.en.vtt' }
+    }
+    tour = ProductTours::Tour.find_by!(key: 'captioned')
+    assert_equal ['/guides/poster.webp', '/guides/guide.en.vtt'], [tour.poster_url, tour.captions_url]
+
+    get "/product_tours/tours/#{tour.id}/edit"
+    assert_select "input[name='tour[captions_url]'][value='/guides/guide.en.vtt']"
+
+    post "/product_tours/tours/#{tour.id}/add_translation", params: { locale: 'fr' }
+    translation = ProductTours::Tour.find_by!(key: 'captioned', locale: 'fr')
+    assert_equal '/guides/poster.webp', translation.poster_url
+    assert_nil translation.captions_url
+  end
+
   test 'adds and manages translations from a tutorial' do
     as_admin!
     original = create_tour(description: 'Translate this description')

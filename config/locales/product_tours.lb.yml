@@ -6,6 +6,7 @@ lb:
     done: "Fäerdeg"
     dialog: "Produktutorial"
     video: "Tutorialvideo"
+    captions_label: "Lëtzebuergesch"
     unavailable: "Dësen Tutorial ass net verfügbar."
     dashboard:
       title: "Produkttouren"

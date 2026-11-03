@@ -6,6 +6,7 @@ nl:
     done: "Klaar"
     dialog: "Producttutorial"
     video: "Tutorialvideo"
+    captions_label: "Nederlands"
     unavailable: "Deze tutorial is niet beschikbaar."
     dashboard:
       title: "Productrondleidingen"

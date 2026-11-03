@@ -6,6 +6,7 @@ es:
     done: "Listo"
     dialog: "Tutorial del producto"
     video: "Video tutorial"
+    captions_label: "Español"
     unavailable: "Este tutorial no está disponible."
     dashboard:
       title: "Recorridos del producto"

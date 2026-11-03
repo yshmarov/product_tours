@@ -89,6 +89,7 @@ module ProductTours
       translation = source.dup
       translation.locale = locale
       translation.status = 'draft'
+      translation.captions_url = nil if Tour.captions_supported?
       if translation.action_tour_key.present? &&
          !Tour.exists?(locale: locale, key: translation.action_tour_key)
         translation.action_tour_key = nil
@@ -160,6 +161,8 @@ module ProductTours
       permitted = %i[key status title video_url action_label action_url action_tour_key]
       permitted << :description if Tour.description_supported?
       permitted << :video if Tour.video_upload_supported?
+      permitted << :poster_url if Tour.poster_supported?
+      permitted << :captions_url if Tour.captions_supported?
       params.require(:tour).permit(*permitted)
     end
 

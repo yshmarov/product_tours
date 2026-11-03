@@ -6,6 +6,7 @@ pl:
     done: "Gotowe"
     dialog: "Samouczek produktu"
     video: "Film instruktażowy"
+    captions_label: "Polski"
     unavailable: "Ten samouczek jest niedostępny."
     dashboard:
       title: "Prezentacje produktu"

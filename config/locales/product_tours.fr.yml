@@ -6,6 +6,7 @@ fr:
     done: "Terminé"
     dialog: "Tutoriel produit"
     video: "Vidéo du tutoriel"
+    captions_label: "Français"
     unavailable: "Ce tutoriel n’est pas disponible."
     dashboard:
       title: "Visites guidées"

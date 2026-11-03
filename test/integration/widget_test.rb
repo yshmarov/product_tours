@@ -63,6 +63,18 @@ class WidgetTest < ActionDispatch::IntegrationTest
     assert_equal '/billing', payload.dig('action', 'url')
   end
 
+  test 'sends a direct video its poster and captions in the tour language' do
+    create_tour(locale: 'fr', title: 'Configurer la facturation', video_url: 'https://cdn.example.test/guide.fr.mp4',
+                poster_url: '/guides/billing.webp', captions_url: '/guides/billing.fr.vtt')
+
+    get '/product_tours/widget/tour', params: { key: 'billing_setup', locale: 'fr' }
+
+    video = response.parsed_body.fetch('video')
+    assert_equal '/guides/billing.webp', video['poster']
+    assert_equal({ 'url' => '/guides/billing.fr.vtt', 'srclang' => 'fr', 'label' => 'Français' }, video['captions'])
+    refute video.key?('poster_url')
+  end
+
   test 'resolves linked tours with a useful default action label' do
     create_tour(key: 'next_step', title: 'Next step')
     create_tour(action_tour_key: 'next_step')

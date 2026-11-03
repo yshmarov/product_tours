@@ -6,6 +6,7 @@ ar:
     done: "تم"
     dialog: "دليل المنتج"
     video: "فيديو تعليمي"
+    captions_label: "العربية"
     unavailable: "هذا الدليل غير متاح."
     dashboard:
       title: "جولات المنتج"

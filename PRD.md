@@ -166,6 +166,8 @@ fixed and safe.
 | `title` | Required |
 | `video_url` | Optional supported HTTPS provider/direct-video URL |
 | `video_metadata` | Resolver/oEmbed output as JSON |
+| `poster_url` | Optional relative path or HTTPS image URL; direct and uploaded videos only (1.2) |
+| `captions_url` | Optional relative path or HTTPS WebVTT URL in the Tour's locale; direct and uploaded videos only (1.2) |
 | `action_label` | Optional; widget supplies Done/Next when blank |
 | `action_url` | Optional relative path or HTTP(S) URL |
 | `action_tour_key` | Optional existing same-locale Tour key |

@@ -75,7 +75,7 @@ What a tutorial carries: a `key`, a title, an optional rich description, an opti
 
 ### Video providers
 
-YouTube, Vimeo, Loom, Tella, Voomly, a direct MP4/WebM URL, or an uploaded file (needs Active Storage). Uploaded videos stream through the engine at `/product_tours/media/:id` — not a public blob URL. Do not build your own blob links.
+YouTube, Vimeo, Loom, Tella, Voomly, a direct MP4/WebM URL, or an uploaded file (needs Active Storage). A direct or uploaded video can also take a poster and a WebVTT captions file in the tutorial's language (`poster_url`, `captions_url`); provider embeds keep their own. An app installed before 1.2 lacks those columns until it runs `bin/rails generate product_tours:upgrade` and migrates — the model's `poster_supported?`/`captions_supported?` say whether they exist. Uploaded videos stream through the engine at `/product_tours/media/:id` — not a public blob URL. Do not build your own blob links.
 
 **The engine edits the app's Content Security Policy.** It appends the providers' embed hosts to `frame-src` (or to `default-src` when `frame-src` is unset) in an initializer that runs after the host's own. That is deliberate — an embed silently blocked by CSP is a bad first five minutes — but know it happens, and do not hand-add those `frame-src` entries yourself. If the app sets its CSP somewhere unusual (a middleware, a per-controller override), that is where a blocked embed will come from.
 
@@ -164,7 +164,7 @@ bundle exec rubocop              # must be clean
 BUNDLE_GEMFILE=gemfiles/rails_7.1.gemfile bundle exec rake test   # 7.1, 7.2, 8.0, 8.1 in gemfiles/
 ```
 
-Layout: `app/` controllers, `Tour`, dashboard views · `lib/product_tours/` config, widget JS, seeds, engine, CSP patch · `lib/generators/product_tours/install/` the one generator · `config/locales/` 26 locales · `test/` minitest with `test/dummy` as the host app.
+Layout: `app/` controllers, `Tour`, dashboard views · `lib/product_tours/` config, widget JS, seeds, engine, CSP patch · `lib/generators/product_tours/` the install generator and the idempotent upgrade generator · `config/locales/` 26 locales · `test/` minitest with `test/dummy` as the host app.
 
 Conventions this codebase holds to — follow them rather than the first thing that works:
 

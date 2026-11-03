@@ -47,8 +47,7 @@ module ProductTours
     end
 
     def tour_payload(tour)
-      video = tour.resolved_video
-      video[:url] = media_path(tour) if video&.dig(:kind) == 'upload'
+      video = player_video(tour)
       {
         key: tour.key,
         locale: tour.locale,
@@ -61,6 +60,25 @@ module ProductTours
           tourKey: tour.action_tour_key.presence
         }
       }
+    end
+
+    def player_video(tour)
+      video = tour.resolved_video
+      return if video.nil?
+
+      video[:url] = media_path(tour) if video[:kind] == 'upload'
+      video[:poster] = video.delete(:poster_url)
+      if (captions_url = video.delete(:captions_url))
+        video[:captions] = { url: captions_url, srclang: tour.locale, label: captions_label(tour.locale) }
+      end
+      video.compact
+    end
+
+    # Named in its own language, as a player's captions menu lists them.
+    def captions_label(locale)
+      I18n.t(:captions_label, scope: :product_tours, locale: locale, default: locale.to_s)
+    rescue I18n::InvalidLocale
+      locale.to_s
     end
 
     def default_action_label(tour)

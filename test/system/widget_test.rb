@@ -35,4 +35,20 @@ class WidgetSystemTest < ApplicationSystemTestCase
 
     assert_no_selector '#product-tours-overlay'
   end
+
+  test 'plays a direct video with its poster and a captions track' do
+    create_tour(key: 'demo_walkthrough_start', title: 'Watch the guide',
+                video_url: 'https://cdn.example.test/guide.mp4',
+                poster_url: '/guide-poster.webp', captions_url: '/guide.en.vtt')
+
+    visit '/sample'
+    find('[data-product-tour="demo_walkthrough_start"]').click
+
+    within '#product-tours-overlay' do
+      player = find('video[aria-label="Watch the guide"]')
+      assert_equal '/guide-poster.webp', URI(player[:poster]).path
+      track = player.find('track', visible: :all)
+      assert_equal %w[captions en English], [track[:kind], track[:srclang], track[:label]]
+    end
+  end
 end

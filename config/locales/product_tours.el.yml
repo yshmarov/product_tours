@@ -6,6 +6,7 @@ el:
     done: "Τέλος"
     dialog: "Οδηγός προϊόντος"
     video: "Βίντεο οδηγός"
+    captions_label: "Ελληνικά"
     unavailable: "Αυτός ο οδηγός δεν είναι διαθέσιμος."
     dashboard:
       title: "Περιηγήσεις προϊόντος"

@@ -6,6 +6,7 @@ ru:
     done: "Готово"
     dialog: "Руководство по продукту"
     video: "Обучающее видео"
+    captions_label: "Русский"
     unavailable: "Это руководство недоступно."
     dashboard:
       title: "Обзоры продукта"

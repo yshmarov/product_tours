@@ -6,6 +6,7 @@ uk:
     done: "Готово"
     dialog: "Посібник із продукту"
     video: "Навчальне відео"
+    captions_label: "Українська"
     unavailable: "Цей посібник недоступний."
     dashboard:
       title: "Огляди продукту"

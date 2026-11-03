@@ -6,6 +6,7 @@ tr:
     done: "Bitti"
     dialog: "Ürün eğitimi"
     video: "Eğitim videosu"
+    captions_label: "Türkçe"
     unavailable: "Bu eğitim kullanılamıyor."
     dashboard:
       title: "Ürün turları"

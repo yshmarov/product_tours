@@ -6,6 +6,7 @@ ur:
     done: "مکمل"
     dialog: "پروڈکٹ ٹیوٹوریل"
     video: "ٹیوٹوریل ویڈیو"
+    captions_label: "اردو"
     unavailable: "یہ ٹیوٹوریل دستیاب نہیں ہے۔"
     dashboard:
       title: "پروڈکٹ ٹورز"

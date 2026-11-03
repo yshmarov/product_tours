@@ -1,0 +1,17 @@
+# frozen_string_literal: true
+
+class AddPlayerMediaToProductToursTours < ActiveRecord::Migration<%= migration_version %>
+  COLUMNS = %i[poster_url captions_url].freeze
+
+  def up
+    COLUMNS.each do |column|
+      add_column :product_tours_tours, column, :text unless column_exists?(:product_tours_tours, column)
+    end
+  end
+
+  def down
+    COLUMNS.each do |column|
+      remove_column :product_tours_tours, column if column_exists?(:product_tours_tours, column)
+    end
+  end
+end

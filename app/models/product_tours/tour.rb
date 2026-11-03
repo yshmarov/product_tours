@@ -30,6 +30,8 @@ module ProductTours
     validate :action_url_is_safe
     validate :video_url_is_supported
     validate :uploaded_file_is_video
+    validate :player_media_urls_are_safe
+    validate :player_media_has_a_player
 
     before_validation :set_default_locale
     before_validation :derive_video_metadata, if: :will_save_change_to_video_url?
@@ -50,12 +52,26 @@ module ProductTours
       false
     end
 
+    # Added in 1.2. An install from an earlier version has neither column until
+    # it runs `bin/rails generate product_tours:upgrade`, and works as before.
+    def self.captions_supported?
+      column_names.include?('captions_url')
+    rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+      false
+    end
+
+    def self.poster_supported?
+      column_names.include?('poster_url')
+    rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+      false
+    end
+
     def uploaded_video?
       self.class.video_upload_supported? && video.attached?
     end
 
     def resolved_video
-      return { kind: 'upload', provider: 'upload', url: nil } if uploaded_video?
+      return { kind: 'upload', provider: 'upload', url: nil, **player_media } if uploaded_video?
 
       resolved = VideoResolver.resolve(video_url)
       return if resolved.nil?
@@ -64,9 +80,15 @@ module ProductTours
         kind: resolved.kind,
         provider: resolved.provider,
         url: resolved.url,
-        thumbnail_url: video_metadata.to_h['thumbnail_url']
+        thumbnail_url: video_metadata.to_h['thumbnail_url'],
+        **(resolved.direct? ? player_media : {})
       }.compact
     end
+
+    # The tour's own video player can show a poster and a captions track.
+    # Provider iframes cannot: their poster and captions are the provider's.
+    def captions_url = (self[:captions_url] if self.class.captions_supported?)
+    def poster_url = (self[:poster_url] if self.class.poster_supported?)
 
     def action_tour
       return if action_tour_key.blank?
@@ -123,6 +145,34 @@ module ProductTours
       return if locale.blank? || self.class.exists?(locale: locale, key: action_tour_key)
 
       errors.add(:action_tour_key, 'must identify an existing tour in the same locale')
+    end
+
+    def player_media
+      { poster_url: poster_url.presence, captions_url: captions_url.presence }.compact
+    end
+
+    def player_media_urls_are_safe
+      { captions_url: captions_url, poster_url: poster_url }.each do |attribute, value|
+        next if value.blank? || safe_media_url?(value)
+
+        errors.add(attribute, 'must be a relative path or an HTTPS URL')
+      end
+    end
+
+    def player_media_has_a_player
+      return if captions_url.blank? && poster_url.blank?
+      return if uploaded_video? || VideoResolver.resolve(video_url)&.direct?
+
+      errors.add(:base, 'A poster and captions need a direct MP4/WebM URL or an uploaded video')
+    end
+
+    def safe_media_url?(value)
+      return !value.start_with?('//') if value.start_with?('/')
+
+      uri = URI.parse(value)
+      uri.is_a?(URI::HTTPS) && uri.host.present? && uri.userinfo.nil?
+    rescue URI::InvalidURIError
+      false
     end
 
     def uploaded_file_is_video

@@ -6,6 +6,7 @@ bg:
     done: "Готово"
     dialog: "Урок за продукта"
     video: "Видео урок"
+    captions_label: "Български"
     unavailable: "Този урок не е наличен."
     dashboard:
       title: "Продуктови обиколки"

@@ -6,6 +6,7 @@ hr:
     done: "Gotovo"
     dialog: "Vodič kroz proizvod"
     video: "Video vodič"
+    captions_label: "Hrvatski"
     unavailable: "Ovaj vodič nije dostupan."
     dashboard:
       title: "Vodiči kroz proizvod"

@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-03
+
+- **Direct and uploaded videos can carry a poster and captions.** A tutorial
+  takes a `poster_url` and a WebVTT `captions_url` in its own language; the
+  widget sets the poster and adds a captions track labeled with the language's
+  own name, from a new `captions_label` key in all 26 locales. Without a
+  poster, the player still seeks to an early frame. Provider embeds are
+  unchanged, and a poster or captions on one is a validation error rather than
+  a silently ignored field. The modal's video also gains an accessible name.
+- Both fields accept a relative path or an HTTPS URL, nothing else. A `.vtt`
+  on another origin needs CORS, and the gem does not touch `media-src` or
+  `img-src`: the host's policy decides what loads.
+- A new translation copies the poster and drops the captions, since the
+  source's captions are in the wrong language.
+- **Costs an upgrade step for existing installs.** Fresh installs get both
+  columns. Installs from 1.0 or 1.1 run `bin/rails generate
+  product_tours:upgrade` and migrate; until they do, the model reports
+  `captions_supported?`/`poster_supported?` as false, the dashboard hides both
+  fields and everything else works as before. The upgrade migration checks
+  each column first and is reversible.
+
 ## [1.1.0] - 2026-10-18
 
 - Add Rails edge CI and experimental Ruby 4.0+ Ractor request support. The host
@@ -221,7 +242,9 @@
 - Removed generic tutorial duplication now that translations provide the only
   intentional content-copying workflow.
 
-[Unreleased]: https://github.com/yshmarov/product_tours/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/yshmarov/product_tours/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/yshmarov/product_tours/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/yshmarov/product_tours/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/yshmarov/product_tours/compare/v0.3.3...v1.0.0
 [0.3.3]: https://github.com/yshmarov/product_tours/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/yshmarov/product_tours/compare/v0.3.1...v0.3.2

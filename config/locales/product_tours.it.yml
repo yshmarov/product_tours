@@ -6,6 +6,7 @@ it:
     done: "Fatto"
     dialog: "Tutorial del prodotto"
     video: "Video tutorial"
+    captions_label: "Italiano"
     unavailable: "Questo tutorial non è disponibile."
     dashboard:
       title: "Tour del prodotto"

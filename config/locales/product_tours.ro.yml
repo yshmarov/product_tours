@@ -6,6 +6,7 @@ ro:
     done: "Gata"
     dialog: "Tutorial de produs"
     video: "Videoclip tutorial"
+    captions_label: "Română"
     unavailable: "Acest tutorial nu este disponibil."
     dashboard:
       title: "Tururi de produs"

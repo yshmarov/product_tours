@@ -25,8 +25,8 @@ which defaults to everyone because showing tutorials in production is the gem's
 purpose. The dashboard is separately protected by `authorize_admin` and fails
 closed outside development until the host explicitly grants access.
 
-A tour can store its key, locale, status, title, video URL and metadata, primary
-action label/destination, timestamps, optional Action Text description, and an
+A tour can store its key, locale, status, title, video URL and metadata, poster and
+captions URLs, primary action label/destination, timestamps, optional Action Text description, and an
 optional Active Storage video. Uploaded videos stream through the engine's
 authorization gate with private, non-stored responses; the route never redirects
 to a reusable signed blob URL. Hosts still own the storage service, bucket

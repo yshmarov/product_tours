@@ -34,6 +34,12 @@
         <dt><%= t("product_tours.dashboard.publication_status", default: "Publication status") %></dt>
         <dd><span class="badge status-<%= tour.status %>"><%= tour.status.humanize %></span></dd>
         <dt><%= t("product_tours.dashboard.video_url", default: "Video URL") %></dt><dd><%= tour.video_url.presence || "—" %></dd>
+        <% if ProductTours::Tour.poster_supported? %>
+          <dt><%= t("product_tours.dashboard.poster_url", default: "Poster image URL") %></dt><dd><%= tour.poster_url.presence || "—" %></dd>
+        <% end %>
+        <% if ProductTours::Tour.captions_supported? %>
+          <dt><%= t("product_tours.dashboard.captions_url", default: "Captions file URL (WebVTT)") %></dt><dd><%= tour.captions_url.presence || "—" %></dd>
+        <% end %>
         <dt><%= t("product_tours.dashboard.action_label", default: "Action label") %></dt><dd><%= tour.action_label.presence || default_label %></dd>
         <dt><%= t("product_tours.dashboard.action_url", default: "Action URL") %></dt><dd><%= tour.action_url.presence || "—" %></dd>
         <dt><%= t("product_tours.dashboard.next_tour", default: "Next tutorial") %></dt>

@@ -9,6 +9,8 @@ ActiveRecord::Schema.define do
     t.string :title, null: false
     t.text :video_url
     t.json :video_metadata, null: false, default: {}
+    t.text :poster_url
+    t.text :captions_url
     t.string :action_label
     t.text :action_url
     t.string :action_tour_key

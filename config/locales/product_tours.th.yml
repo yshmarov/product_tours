@@ -6,6 +6,7 @@ th:
     done: "เสร็จสิ้น"
     dialog: "บทแนะนำผลิตภัณฑ์"
     video: "วิดีโอบทแนะนำ"
+    captions_label: "ไทย"
     unavailable: "บทแนะนำนี้ไม่พร้อมใช้งาน"
     dashboard:
       title: "ทัวร์ผลิตภัณฑ์"

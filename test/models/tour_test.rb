@@ -32,6 +32,43 @@ class TourTest < ActiveSupport::TestCase
     end
   end
 
+  test 'gives its own player a poster and captions from safe URLs' do
+    tour = create_tour(video_url: 'https://cdn.example.test/guide.mp4', poster_url: '/guides/billing.webp',
+                       captions_url: 'https://cdn.example.test/guide.en.vtt')
+
+    assert_equal '/guides/billing.webp', tour.resolved_video[:poster_url]
+    assert_equal 'https://cdn.example.test/guide.en.vtt', tour.resolved_video[:captions_url]
+
+    %w[javascript:alert(1) //evil.example.test/a.vtt http://example.test/a.vtt].each do |url|
+      unsafe = ProductTours::Tour.new(key: 'unsafe', title: 'Unsafe', video_url: 'https://cdn.example.test/guide.mp4',
+                                      captions_url: url, poster_url: url)
+      refute unsafe.valid?, url
+      assert_includes unsafe.errors[:captions_url], 'must be a relative path or an HTTPS URL'
+      assert_includes unsafe.errors[:poster_url], 'must be a relative path or an HTTPS URL'
+    end
+  end
+
+  test 'refuses a poster or captions a provider iframe would ignore' do
+    tour = ProductTours::Tour.new(key: 'provider', title: 'Provider', video_url: 'https://vimeo.com/76979871',
+                                  captions_url: '/guide.en.vtt')
+
+    refute tour.valid?
+    assert_includes tour.errors[:base], 'A poster and captions need a direct MP4/WebM URL or an uploaded video'
+  end
+
+  test 'works as before on an install that has not added the player media columns' do
+    tour = create_tour(video_url: 'https://cdn.example.test/guide.mp4', captions_url: '/guide.en.vtt')
+    columns = ProductTours::Tour.column_names - %w[poster_url captions_url]
+    ProductTours::Tour.define_singleton_method(:column_names) { columns }
+
+    refute_predicate ProductTours::Tour, :captions_supported?
+    assert_nil tour.captions_url
+    assert_equal({ kind: 'direct', provider: 'direct', url: 'https://cdn.example.test/guide.mp4' },
+                 tour.resolved_video)
+  ensure
+    ProductTours::Tour.singleton_class.remove_method(:column_names)
+  end
+
   test 'links to another tour in the same locale' do
     destination = create_tour(key: 'invite_team', title: 'Invite your team')
     source = create_tour(key: 'welcome', action_tour_key: destination.key)
