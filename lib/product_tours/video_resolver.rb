@@ -33,6 +33,8 @@ module ProductTours
     end
 
     def resolve
+      return relative if @url.start_with?('/') && !@url.start_with?('//')
+
       uri = URI.parse(@url)
       return unless uri.is_a?(URI::HTTPS) && uri.host.present? && uri.userinfo.nil?
 
@@ -108,6 +110,14 @@ module ProductTours
       embed = 'https://embed.voomly.com/embed/assets/embed.html?' \
               "videoId=#{URI.encode_www_form_component(id)}&videoRatio=1.777778&type=v"
       Result.new(kind: 'iframe', provider: 'voomly', provider_id: id, url: embed)
+    end
+
+    # A path on the host app's own origin, so a tour plays from whichever environment holds the record.
+    def relative
+      uri = URI.parse(@url)
+      direct(uri) if uri.host.nil? && uri.scheme.nil?
+    rescue URI::InvalidURIError
+      nil
     end
 
     def direct(uri)

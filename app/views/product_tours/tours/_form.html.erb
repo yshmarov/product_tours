@@ -89,9 +89,9 @@
     <div data-video-source-fields="url" <%= "hidden" unless video_source == "url" %>>
       <div class="field">
         <%= form.label :video_url, t("product_tours.dashboard.video_url", default: "Video URL") %>
-        <%= form.url_field :video_url, placeholder: "https://www.loom.com/share/...",
-                           disabled: video_source != "url", data: { video_preview_input: true } %>
-        <small><%= t("product_tours.dashboard.video_hint", default: "YouTube, Vimeo, Loom, Tella, Voomly, or a direct MP4/WebM URL.") %></small>
+        <%= form.text_field :video_url, placeholder: "https://www.loom.com/share/...",
+                            disabled: video_source != "url", data: { video_preview_input: true } %>
+        <small><%= t("product_tours.dashboard.video_hint", default: "YouTube, Vimeo, Loom, Tella, Voomly, or a direct MP4/WebM URL or path.") %></small>
       </div>
       <div class="form-video-preview" data-video-preview
            data-endpoint="<%= video_preview_tours_path %>"

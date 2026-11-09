@@ -110,7 +110,8 @@ module ProductTours
     def video_url_is_supported
       return if video_url.blank? || VideoResolver.resolve(video_url)
 
-      errors.add(:video_url, 'must be an HTTPS YouTube, Vimeo, Loom, Tella, Voomly, MP4, or WebM URL')
+      errors.add(:video_url,
+                 'must be an HTTPS YouTube, Vimeo, Loom, Tella, Voomly, MP4, or WebM URL, or an MP4 or WebM path')
     end
 
     def action_url_is_safe

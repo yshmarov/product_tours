@@ -38,12 +38,22 @@ class VideoResolverTest < ActiveSupport::TestCase
     end
   end
 
+  test 'resolves a direct video path on the host app' do
+    resolved = ProductTours::VideoResolver.resolve('/tutorials/handlers.en.mp4')
+
+    assert resolved.direct?
+    assert_equal '/tutorials/handlers.en.mp4', resolved.url
+  end
+
   test 'fails closed for schemes, lookalikes, and non-video paths' do
     urls = [
       'http://youtube.com/watch?v=M7lc1UVf-VE',
       'https://youtube.com.evil.test/watch?v=M7lc1UVf-VE',
       'https://vimeo.com/channels/staffpicks',
       'https://cdn.example.test/video.mov',
+      '//cdn.example.test/guide.mp4',
+      '/tutorials/guide.mov',
+      'tutorials/guide.mp4',
       'javascript:alert(1)'
     ]
 

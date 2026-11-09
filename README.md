@@ -144,7 +144,7 @@ Paste any supported HTTPS URL:
 | Loom | Share and embed links |
 | Tella | Video links |
 | Voomly | Share, video, and embed links |
-| Direct | URLs ending in `.mp4` or `.webm` |
+| Direct | HTTPS URLs or paths on your app (`/videos/intro.mp4`) ending in `.mp4` or `.webm` |
 
 YouTube, Vimeo, and Loom metadata comes from their oEmbed endpoints. Metadata is
 best-effort: a timeout never prevents you from saving a valid URL. YouTube uses

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-09
+
+- **A direct video can be a path on the host app**, such as
+  `/tutorials/billing.en.mp4`, like the poster and captions already could. The
+  tour then plays from whichever environment holds the record, rather than
+  pointing a copied staging or development database at production media.
+  Protocol-relative (`//host/…`) and bare relative paths are still rejected.
+- The dashboard's video field is now a text field, since the browser's URL
+  field refuses a path. It costs the browser's own URL check; the model's
+  validation still decides.
+
 ## [1.2.0] - 2026-11-03
 
 - **Direct and uploaded videos can carry a poster and captions.** A tutorial
@@ -242,7 +253,8 @@
 - Removed generic tutorial duplication now that translations provide the only
   intentional content-copying workflow.
 
-[Unreleased]: https://github.com/yshmarov/product_tours/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/yshmarov/product_tours/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/yshmarov/product_tours/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/yshmarov/product_tours/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/yshmarov/product_tours/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/yshmarov/product_tours/compare/v0.3.3...v1.0.0
